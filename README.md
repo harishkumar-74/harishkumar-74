@@ -12,6 +12,8 @@ DevOps Engineer | Cloud Engineer | DevSecOps Enthusiast
 
 Building secure, scalable and automated cloud infrastructure.
 ```
+---
+
 ```bash
 harish@devops:~$ cat philosophy.txt
 ```
@@ -23,8 +25,7 @@ harish@devops:~$ cat philosophy.txt
 
 ✔ Security belongs in every pipeline.
 
-✔ If it isn't automated,
-  I'll probably automate it.
+✔ If it isn't automated, I'll probably automate it.
 
 ✔ Learn. Build. Break. Fix. Repeat.
 ```
@@ -140,6 +141,8 @@ projects/
     ├── Grafana
     └── CloudWatch
 ```
+---
+
 ```bash
 harish@devops:~/projects$ find . -name bugs
 ```
