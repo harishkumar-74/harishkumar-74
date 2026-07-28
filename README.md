@@ -1,3 +1,4 @@
+````markdown
 # ███████████████████████████████████████
 # Ubuntu 24.04 LTS
 # Last login: Recruiter from github.com
@@ -12,6 +13,7 @@ DevOps Engineer | Cloud Engineer | DevSecOps Enthusiast
 
 Building secure, scalable and automated cloud infrastructure.
 ```
+
 ---
 
 ```bash
@@ -29,6 +31,7 @@ harish@devops:~$ cat philosophy.txt
 
 ✔ Learn. Build. Break. Fix. Repeat.
 ```
+
 ---
 
 ```console
@@ -36,19 +39,18 @@ harish@devops:~$ cat about.txt
 ```
 
 ```yaml
-Name        : Harish Kumar S
-Location    : Coimbatore, Tamil Nadu, India.
+Name           : Harish Kumar S
+Location       : Coimbatore, Tamil Nadu, India
+Education      : Integrated M.Tech (Computer Science & Engineering)
 
-Education   : Integrated M.Tech (Computer Science & Engineering)
-
-Current Role:
+Current Role   :
   - DevOps Engineer @ Benchmarrk
 
-Previous Role:
+Previous Roles :
   - Cloud Engineer Intern @ Virtual Softech
   - Web Developer Intern @ Senthuron Tech
 
-Current Focus:
+Current Focus  :
   - AWS Cloud
   - Kubernetes
   - Terraform
@@ -56,7 +58,7 @@ Current Focus:
   - GitOps
   - DevSecOps
 
-Learning:
+Learning       :
   - Advanced Kubernetes
   - Platform Engineering
   - Cloud Security
@@ -68,24 +70,26 @@ Learning:
 harish@devops:~$ kubectl get skills
 ```
 
-| NAME | STATUS |
-|------|--------|
-| AWS | ✅ Ready |
-| Docker | ✅ Ready |
-| Kubernetes | ✅ Ready |
-| Terraform | ✅ Ready |
-| Jenkins | ✅ Ready |
-| GitHub Actions | ✅ Ready |
-| ArgoCD | ✅ Ready |
-| Helm | ✅ Ready |
-| Linux | ✅ Ready |
-| Bash | ✅ Ready |
-| Python | ✅ Ready |
-| Prometheus | ✅ Ready |
-| Grafana | ✅ Ready |
-| Datadog | ✅ Ready |
-| SonarQube | ✅ Ready |
-| Trivy | ✅ Ready |
+```text
+NAME               STATUS
+------------------------------
+AWS                ✅ Ready
+Docker             ✅ Ready
+Kubernetes         ✅ Ready
+Terraform          ✅ Ready
+Jenkins            ✅ Ready
+GitHub Actions     ✅ Ready
+ArgoCD             ✅ Ready
+Helm               ✅ Ready
+Linux              ✅ Ready
+Bash               ✅ Ready
+Python             ✅ Ready
+Prometheus         ✅ Ready
+Grafana            ✅ Ready
+Datadog            ✅ Ready
+SonarQube          ✅ Ready
+Trivy              ✅ Ready
+```
 
 ---
 
@@ -94,11 +98,11 @@ harish@devops:~$ history
 ```
 
 ```text
-2026  DevOps Engineer          Benchmarrk - Coimbatore
+2026    DevOps Engineer          Benchmarrk, Coimbatore
 
-2025  Cloud Engineer Intern    Virtual Softech - Coimbatore
+2025    Cloud Engineer Intern    Virtual Softech, Coimbatore
 
-2024  Web Developer Intern     Senthuron Tech - Coimbatore
+2024    Web Developer Intern     Senthuron Tech, Coimbatore
 ```
 
 ---
@@ -141,6 +145,7 @@ projects/
     ├── Grafana
     └── CloudWatch
 ```
+
 ---
 
 ```bash
@@ -150,24 +155,22 @@ harish@devops:~/projects$ find . -name bugs
 ```text
 find: 'bugs': No such file or directory 😎
 ```
+
 ---
 
 ```console
 harish@devops:~$ cat achievements.log
 ```
 
-```diff
-+ Deployment Time Reduced           50%
-
-+ Manual Provisioning Reduced       60%
-
-+ System Availability Increased     25%
-
-+ Release Efficiency Improved       40%
-
-+ Security Exposure Reduced         35%
-
-+ Mean Time To Detect Reduced       45%
+```text
+Metric                              Improvement
+-----------------------------------------------
+Deployment Time                     +50%
+Manual Provisioning                 -60%
+System Availability                 +25%
+Release Efficiency                  +40%
+Security Exposure                   -35%
+Mean Time To Detect (MTTD)          -45%
 ```
 
 ---
@@ -178,25 +181,24 @@ harish@devops:~$ systemctl status harish
 
 ```text
 ● harish.service - DevOps Engineer
-
-Loaded:      Active
-
-Status:      Running
+     Loaded: loaded
+     Active: active (running)
 
 Environment:
-✔ AWS
-✔ Kubernetes
-✔ Terraform
-✔ Jenkins
-✔ Docker
-✔ GitHub Actions
-✔ ArgoCD
-✔ Helm
-✔ Linux
-✔ DevSecOps
+  ✔ AWS
+  ✔ Kubernetes
+  ✔ Terraform
+  ✔ Jenkins
+  ✔ Docker
+  ✔ GitHub Actions
+  ✔ ArgoCD
+  ✔ Helm
+  ✔ Linux
+  ✔ DevSecOps
 
 Current Mission:
-Automating cloud infrastructure and building secure CI/CD pipelines.
+  Automating cloud infrastructure and
+  building secure CI/CD pipelines.
 ```
 
 ---
@@ -206,14 +208,9 @@ harish@devops:~$ cat contact.yml
 ```
 
 ```yaml
-email:
-  harish74gobi@gmail.com
-
-linkedin:
-  https://linkedin.com/in/harishkumar74
-
-github:
-  https://github.com/harishkumar-74
+Email      : harish74gobi@gmail.com
+LinkedIn   : linkedin.com/in/harishkumar74
+GitHub     : github.com/harishkumar-74
 ```
 
 ---
@@ -226,15 +223,10 @@ harish@devops:~$ echo $STATUS
 Open to Opportunities
 
 ✔ Cloud Engineer
-
 ✔ DevOps Engineer
-
 ✔ DevSecOps Engineer
-
 ✔ Remote
-
 ✔ Hybrid
-
 ✔ On-site
 ```
 
@@ -253,3 +245,4 @@ Thanks for visiting.
 
 Let's build secure, scalable and reliable cloud infrastructure together. 🚀
 ```
+````
