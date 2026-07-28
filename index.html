@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>harish@cloud:~$ — Harish Kumar S | Cloud &amp; DevOps Engineer</title>
+<meta name="description" content="Harish Kumar S — Cloud & DevOps Engineer. An interactive Linux-terminal portfolio. Type 'help' to begin.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23090909'/%3E%3Ctext x='50' y='68' font-size='60' text-anchor='middle' fill='%2339d97a' font-family='monospace'%3E_%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
+<style>
+/* =====================================================================
+   MODULE: DESIGN TOKENS
+   Single source of truth for the visual system. Change a theme here
+   and every component below picks it up.
+   ===================================================================== */
+:root{
+  --bg:            #090909;
+  --bg-raised:     #0f1210;
+  --bg-panel:      #0c0f0d;
+  --border:        #1c2620;
+  --border-soft:   #151b17;
+
+  --green:         #39d97a;   /* primary text / prompt */
+  --green-dim:     #1f7a48;
+  --green-glow:    rgba(57,217,122,0.35);
+  --cyan:          #5ce1e6;   /* accent / links / headers */
+  --purple:        #b892ff;   /* secondary accent / keys */
+  --red:           #ff5c5c;   /* errors */
+  --yellow:        #f3d768;   /* warnings */
+  --white:         #eafff2;
+  --muted:         #6b8f7c;
+
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
+
+  --radius: 3px;
+  --scanline-op: 0.03;
+}
+
+/* Alternate theme palettes — swapped onto :root via data-theme attr */
+[data-theme="blue"]{
+  --green:#5ce1e6; --green-dim:#1c6e73; --green-glow:rgba(92,225,230,0.35);
+  --cyan:#7ea6ff; --purple:#b892ff;
+}
+[data-theme="amber"]{
+  --green:#f3b34c; --green-dim:#8a611f; --green-glow:rgba(243,179,76,0.32);
+  --cyan:#f3d768; --purple:#ff9d5c;
+}
+
+*,*::before,*::after{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--green);
+  font-family:var(--font-mono);
+  font-size:15px;
+  line-height:1.55;
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{ background:var(--green); color:var(--bg); }
+::-webkit-scrollbar{ width:10px; }
+::-webkit-scrollbar-track{ background:var(--bg); }
+::-webkit-scrollbar-thumb{ background:var(--border); border-radius:5px; }
+::-webkit-scrollbar-thumb:hover{ background:var(--green-dim); }
+
+a{ color:var(--cyan); text-decoration:none; border-bottom:1px dotted var(--green-dim); }
+a:hover{ color:var(--white); border-bottom-color:var(--cyan); }
+
+/* CRT-ish ambient texture — subtle, never distracting */
+.crt-overlay{
+  position:fixed; inset:0; pointer-events:none; z-index:50; mix-blend-mode:overlay;
+  background:repeating-linear-gradient(
+    to bottom, rgba(255,255,255,var(--scanline-op)) 0px,
+    rgba(255,255,255,var(--scanline-op)) 1px,
+    transparent 1px, transparent 3px
+  );
+  opacity:.5;
+}
+.vignette{
+  position:fixed; inset:0; pointer-events:none; z-index:49;
+  background:radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.55) 130%);
+}
+
+/* =====================================================================
+   MODULE: BOOT SCREEN
+   ===================================================================== */
+#boot-screen{
+  position:fixed; inset:0; z-index:100;
+  background:var(--bg); color:var(--green);
+  padding:6vh 6vw; font-size:13.5px;
+  overflow:hidden;
+}
+#boot-log{ white-space:pre-wrap; word-break:break-word; }
+.boot-line{ opacity:0; animation:fadeIn .12s ease forwards; }
+@keyframes fadeIn{ to{ opacity:1; } }
+.boot-ok{ color:var(--green); }
+.boot-tag{ color:var(--cyan); }
+.boot-warn{ color:var(--yellow); }
+.boot-dim{ color:var(--muted); }
+.boot-bar-track{ display:inline-block; width:220px; height:8px; border:1px solid var(--border); vertical-align:middle; margin:0 8px; position:relative; }
+.boot-bar-fill{ position:absolute; inset:1px; width:0%; background:var(--green); box-shadow:0 0 8px var(--green-glow); transition:width .18s linear; }
+#boot-skip{
+  position:absolute; bottom:5vh; right:6vw; color:var(--muted); font-size:12px;
+  border:1px solid var(--border); padding:6px 12px; border-radius:var(--radius); cursor:pointer;
+  background:transparent; font-family:var(--font-mono);
+}
+#boot-skip:hover{ color:var(--green); border-color:var(--green-dim); }
+#boot-screen.hidden{ display:none; }
+
+/* =====================================================================
+   MODULE: TERMINAL SHELL
+   ===================================================================== */
+#terminal{
+  height:100vh; width:100vw;
+  display:flex; flex-direction:column;
+  background:
+    radial-gradient(1200px 800px at 50% -10%, rgba(57,217,122,0.06), transparent 60%),
+    var(--bg);
+}
+
+.titlebar{
+  flex:0 0 auto;
+  display:flex; align-items:center; gap:10px;
+  padding:9px 14px;
+  background:var(--bg-raised);
+  border-bottom:1px solid var(--border);
+  font-size:12.5px;
+  color:var(--muted);
+  user-select:none;
+}
+.tb-dots{ display:flex; gap:6px; }
+.tb-dot{ width:11px; height:11px; border-radius:50%; }
+.tb-dot.r{ background:#ff5f56; } .tb-dot.y{ background:#ffbd2e; } .tb-dot.g{ background:#27c93f; }
+.tb-title{ flex:1; text-align:center; color:var(--muted); letter-spacing:.3px; }
+.tb-title b{ color:var(--green); font-weight:600; }
+.tb-status{ display:flex; gap:14px; align-items:center; font-size:11.5px; }
+.tb-status span{ display:flex; align-items:center; gap:5px; }
+.dot-live{ width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green-glow); animation:pulse 2s ease-in-out infinite; }
+@keyframes pulse{ 0%,100%{ opacity:1;} 50%{opacity:.35;} }
+.tb-btn{ background:transparent; border:1px solid var(--border); color:var(--muted); font-family:var(--font-mono); font-size:11px; padding:3px 8px; border-radius:var(--radius); cursor:pointer; }
+.tb-btn:hover{ color:var(--green); border-color:var(--green-dim); }
+
+#screen{
+  flex:1 1 auto;
+  overflow-y:auto;
+  padding:18px 20px 10px;
+  scroll-behavior:smooth;
+}
+#screen:focus{ outline:none; }
+
+.line{ white-space:pre-wrap; word-break:break-word; margin:0 0 2px; }
+.line.echo{ color:var(--white); }
+.line.echo .prompt-seg{ color:var(--green); }
+.line.echo .path-seg{ color:var(--cyan); }
+.out{ margin:2px 0 14px; }
+.out p{ margin:0 0 8px; }
+.dim{ color:var(--muted); }
+.c-cyan{ color:var(--cyan); }
+.c-purple{ color:var(--purple); }
+.c-red{ color:var(--red); }
+.c-yellow{ color:var(--yellow); }
+.c-white{ color:var(--white); }
+.c-green{ color:var(--green); }
+b,strong{ color:var(--white); font-weight:600; }
+
+table.tty{ border-collapse:collapse; margin:6px 0 10px; font-size:14px; }
+table.tty th{ text-align:left; color:var(--cyan); font-weight:600; padding:2px 18px 6px 0; border-bottom:1px solid var(--border); }
+table.tty td{ padding:2px 18px 2px 0; vertical-align:top; }
+
+.ascii{ color:var(--green); line-height:1.15; font-size:12px; white-space:pre; }
+.ascii .a-cyan{ color:var(--cyan); }
+
+.help-grid{ display:grid; grid-template-columns:max-content 1fr; gap:3px 18px; margin:6px 0 6px; }
+.help-grid .cmd{ color:var(--cyan); }
+.help-grid .desc{ color:var(--muted); }
+
+.skillbar-row{ display:grid; grid-template-columns:150px 1fr 46px; align-items:center; gap:12px; margin-bottom:7px; font-size:13.5px; }
+.skillbar-track{ height:9px; background:var(--bg-panel); border:1px solid var(--border); border-radius:5px; overflow:hidden; }
+.skillbar-fill{ height:100%; background:linear-gradient(90deg,var(--green-dim),var(--green)); width:0%; transition:width 1s cubic-bezier(.2,.8,.2,1); box-shadow:0 0 6px var(--green-glow); }
+.skillbar-val{ text-align:right; color:var(--muted); }
+
+.card{ border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; margin:8px 0 14px; background:var(--bg-panel); }
+.card-title{ color:var(--cyan); font-weight:600; font-size:15px; margin-bottom:2px; }
+.card-sub{ color:var(--muted); font-size:12.5px; margin-bottom:10px; }
+.tag{ display:inline-block; border:1px solid var(--green-dim); color:var(--green); font-size:11px; padding:2px 8px; border-radius:20px; margin:0 6px 6px 0; }
+
+.timeline{ border-left:2px solid var(--border); margin-left:6px; padding-left:20px; }
+.tl-item{ position:relative; margin-bottom:18px; }
+.tl-item::before{ content:''; position:absolute; left:-25px; top:4px; width:9px; height:9px; border-radius:50%; background:var(--green); box-shadow:0 0 8px var(--green-glow); }
+.tl-role{ color:var(--white); font-weight:600; }
+.tl-meta{ color:var(--muted); font-size:12.5px; margin-bottom:6px; }
+.tl-item ul{ margin:4px 0 0; padding-left:18px; }
+.tl-item li{ margin-bottom:3px; }
+
+/* input row */
+#input-row{
+  flex:0 0 auto;
+  display:flex; align-items:flex-start;
+  padding:6px 20px 16px;
+  gap:8px;
+}
+#prompt-label{ white-space:pre; color:var(--green); user-select:none; padding-top:1px; }
+#prompt-label .p-user{ color:var(--green); font-weight:600; }
+#prompt-label .p-at{ color:var(--muted); }
+#prompt-label .p-host{ color:var(--cyan); font-weight:600; }
+#prompt-label .p-path{ color:var(--purple); }
+#prompt-label .p-dollar{ color:var(--green); }
+#input-wrap{ flex:1; position:relative; }
+#cmd-input{
+  width:100%;
+  background:transparent;
+  border:none;
+  color:var(--white);
+  font-family:var(--font-mono);
+  font-size:15px;
+  caret-color:var(--green);
+  padding:0;
+}
+#cmd-input:focus{ outline:none; }
+#ghost{
+  position:absolute; left:0; top:0; pointer-events:none;
+  color:var(--muted); opacity:.55; white-space:pre;
+}
+
+.suggest-pill{ color:var(--muted); font-size:12px; margin-top:4px; }
+.suggest-pill b{ color:var(--yellow); }
+
+@media (max-width:640px){
+  body{ font-size:13.5px; }
+  #screen{ padding:12px 12px 6px; }
+  #input-row{ padding:6px 12px 14px; }
+  .skillbar-row{ grid-template-columns:100px 1fr 38px; gap:8px; font-size:12px; }
+  .help-grid{ grid-template-columns:1fr; }
+  table.tty{ display:block; overflow-x:auto; max-width:100%; }
+  .tb-status span:not(:first-child){ display:none; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================ BOOT SCREEN ============================ -->
+<div id="boot-screen">
+  <div id="boot-log"></div>
+  <button id="boot-skip" type="button">skip boot ⏎</button>
+</div>
+
+<!-- ============================ TERMINAL SHELL ========================== -->
+<div id="terminal" style="display:none;">
+  <div class="titlebar">
+    <div class="tb-dots"><span class="tb-dot r"></span><span class="tb-dot y"></span><span class="tb-dot g"></span></div>
+    <div class="tb-title"><b>harish@cloud</b>: ~/portfolio — 80x24</div>
+    <div class="tb-status">
+      <span><i class="dot-live"></i> online</span>
+      <span id="tb-uptime" class="dim">uptime 0m</span>
+      <span class="dim">⎇ main</span>
+      <button class="tb-btn" id="btn-theme" type="button" title="cycle theme">theme</button>
+      <button class="tb-btn" id="btn-matrix" type="button" title="toggle matrix rain">matrix</button>
+    </div>
+  </div>
+
+  <div id="screen" tabindex="-1"></div>
+
+  <div id="input-row">
+    <span id="prompt-label"></span>
+    <div id="input-wrap">
+      <div id="ghost"></div>
+      <input id="cmd-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="terminal command input" />
+    </div>
+  </div>
+</div>
+
+<canvas id="matrix-canvas" style="position:fixed;inset:0;z-index:40;pointer-events:none;display:none;"></canvas>
+<div class="crt-overlay"></div>
+<div class="vignette"></div>
+
+<script>
+"use strict";
+
+/* =====================================================================
+   MODULE: UTILS
+   Small stateless helpers shared across every other module.
+   ===================================================================== */
+const Utils = (() => {
+  const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
+
+  const escapeHtml = (str) =>
+    String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+
+  // Levenshtein distance — used for "did you mean" suggestions
+  const levenshtein = (a, b) => {
+    const m = a.length, n = b.length;
+    const d = Array.from({ length: m + 1 }, (_, i) => [i, ...Array(n).fill(0)]);
+    for (let j = 0; j <= n; j++) d[0][j] = j;
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        d[i][j] = a[i - 1] === b[j - 1]
+          ? d[i - 1][j - 1]
+          : 1 + Math.min(d[i - 1][j], d[i][j - 1], d[i - 1][j - 1]);
+      }
+    }
+    return d[m][n];
+  };
+
+  const pad = (str, len) => (str + " ".repeat(len)).slice(0, len);
+
+  const formatUptime = (ms) => {
+    const s = Math.floor(ms / 1000);
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    if (h > 0) return `${h}h ${m}m ${sec}s`;
+    if (m > 0) return `${m}m ${sec}s`;
+    return `${sec}s`;
+  };
+
+  const copyToClipboard = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const randomOf = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+  return { sleep, escapeHtml, levenshtein, pad, formatUptime, copyToClipboard, randomOf };
+})();
+
+/* =====================================================================
+   MODULE: DATA
+   Every real-world fact about Harish lives here and ONLY here.
+   To update the portfolio's content later, this is the single section
+   that needs editing — nothing else in the file needs to change.
+   ===================================================================== */
+const PortfolioData = {
+  identity: {
+    name: "Harish Kumar S",
+    role: "DevOps & DevSecOps Engineer · Cloud Engineer",
+    location: "Coimbatore, Tamil Nadu, India",
+    email: "harish74gobi@gmail.com",
+    github: "https://github.com/harishkumar-74",
+    githubHandle: "github.com/harishkumar-74",
+    linkedin: "https://linkedin.com/in/harishkumar74",
+    linkedinHandle: "linkedin.com/in/harishkumar74",
+    resumeFile: "resume.pdf",
+    status: "Open to DevOps, DevSecOps & Cloud Engineer roles — India & Remote",
+  },
+
+  about: [
+    "I'm a DevOps & DevSecOps Engineer who thinks in pipelines, not just projects — every problem",
+    "eventually looks like a graph of build → test → scan → deploy → observe to me.",
+    "",
+    "My work sits at the intersection of AWS cloud infrastructure, GitOps-driven Kubernetes delivery,",
+    "and shift-left security. I like taking a manual, fragile process and turning it into something",
+    "versioned, automated, and boring in the best possible way.",
+    "",
+    "Career objective: grow into a Senior/Staff DevOps or Platform Engineering role where I can own",
+    "reliability and delivery velocity for a product end-to-end — infra as code, secure-by-default",
+    "pipelines, and observability that actually gets looked at during an incident.",
+    "",
+    "I learn in public — breaking things in home-lab Kubernetes clusters before they ever reach a real",
+    "pipeline, and reading post-mortems the way some people read novels.",
+  ],
+
+  skills: [
+    { name: "Linux",           level: 90 },
+    { name: "AWS",             level: 88 },
+    { name: "Docker",          level: 90 },
+    { name: "Kubernetes",      level: 85 },
+    { name: "Terraform",       level: 87 },
+    { name: "Jenkins",         level: 85 },
+    { name: "GitHub Actions",  level: 82 },
+    { name: "ArgoCD / Helm",   level: 80 },
+    { name: "DevSecOps",       level: 84 },
+    { name: "Prometheus/Grafana", level: 80 },
+    { name: "Python",          level: 72 },
+    { name: "Bash",            level: 85 },
+    { name: "Networking",      level: 78 },
+    { name: "CI/CD",           level: 90 },
+  ],
+
+  certifications: [
+    "AWS Certified",
+    "Docker Certified Associate (training)",
+    "HashiCorp Terraform Associate (training)",
+    "Linux Administration",
+    "Kubernetes (CKA track)",
+    "Jenkins CI/CD",
+    "Cisco CCNA",
+  ],
+
+  experience: [
+    {
+      role: "DevOps Engineer",
+      org: "Benchmarrk",
+      loc: "Coimbatore, TN",
+      period: "Feb 2026 – Present",
+      points: [
+        "Designed and maintained CI/CD pipelines using Jenkins and GitHub Actions, cutting deployment time by 50%.",
+        "Managed Kubernetes workloads with ArgoCD and Helm for GitOps-driven deployments — zero-downtime releases, +40% release efficiency.",
+        "Embedded a DevSecOps toolchain into every pipeline stage (SonarQube, Trivy, OWASP Dependency-Check), reducing critical security exposure by 35%.",
+        "Deployed Datadog alongside Prometheus and Grafana for full-stack observability, cutting MTTD by 45%.",
+      ],
+    },
+    {
+      role: "Cloud Engineer Intern",
+      org: "Virtual Softech",
+      loc: "Coimbatore, TN",
+      period: "Dec 2025 – May 2026 (6 months)",
+      points: [
+        "Managed AWS infrastructure across EC2, VPC, IAM, S3, RDS, ALB and Auto Scaling — improved system availability by 25%.",
+        "Automated environment provisioning with Terraform modules and shell scripts, removing 60% of manual effort.",
+        "Strengthened network security with public/private subnet design, NAT Gateways, Security Groups and NACLs.",
+      ],
+    },
+    {
+      role: "Web Developer Intern",
+      org: "Senthuron Tech",
+      loc: "Coimbatore, TN",
+      period: "Jun 2024 – Dec 2024 (7 months)",
+      points: [
+        "Delivered responsive websites for multiple clients, increasing user engagement by 30%+ and cutting page load time by 40%.",
+        "Collaborated in Agile sprints with regular code reviews and stand-ups, consistently meeting sprint commitments.",
+      ],
+    },
+  ],
+
+  education: [
+    { degree: "Integrated M.Tech, Computer Science & Engineering", school: "Sri Ramakrishna Engineering College, Coimbatore", period: "2021 – 2026" },
+    { degree: "HSE — 86%", school: "Municipal Boys Hr. Sec. School, Gobichettipalayam, Erode", period: "2019 – 2021" },
+    { degree: "SSLC — 78%", school: "Municipal Boys Hr. Sec. School, Gobichettipalayam, Erode", period: "2018 – 2019" },
+  ],
+
+  projects: [
+    {
+      id: 1,
+      name: "End-to-End DevSecOps CI/CD Pipeline",
+      tagline: "Fully automated build-to-deploy pipeline with security gates baked in",
+      stack: ["Jenkins", "Docker", "Kubernetes", "ArgoCD", "Helm", "SonarQube", "Trivy", "OWASP Dependency-Check"],
+      overview: "A complete CI/CD pipeline that takes a commit from source control to a running Kubernetes workload with zero manual steps, while treating security scanning as a required gate rather than an afterthought.",
+      problem: "Manual deploys were slow, inconsistent, and security scanning happened (if at all) after release — meaning vulnerabilities shipped to production and releases were risky, all-hands events.",
+      architecture: "Jenkins orchestrates the pipeline: checkout → SonarQube static analysis → Docker build → Trivy image scan → OWASP dependency check → push to registry → ArgoCD detects the new image via GitOps and syncs Helm charts into the cluster.",
+      features: [
+        "Security quality gates that block any build with a CVSS score ≥ 7.0",
+        "GitOps-driven deployment via ArgoCD — cluster state always matches Git",
+        "Zero-downtime rolling deployments on Kubernetes",
+        "Reduced total release cycle time by 50%",
+      ],
+      challenges: "Getting SonarQube and Trivy scan results to reliably fail the Jenkins pipeline (not just report warnings) required custom quality-gate polling logic and careful exit-code handling across shell steps.",
+      learned: "How much of 'DevSecOps' is really pipeline plumbing and failure-mode design — the scanners are the easy part, making the pipeline fail loudly and correctly is the hard part.",
+      github: "https://github.com/harishkumar-74",
+    },
+    {
+      id: 2,
+      name: "AWS 3-Tier Highly Available Architecture",
+      tagline: "Production-grade HA architecture, fully reproducible via Terraform",
+      stack: ["EC2", "VPC", "RDS Multi-AZ", "S3", "ALB", "Auto Scaling", "Route 53"],
+      overview: "A classic 3-tier (web / app / data) architecture on AWS designed for a 99.9% availability SLA, with every component defined as code.",
+      problem: "Hand-built environments drift, are slow to rebuild after a disaster, and make it hard to guarantee dev/staging/prod parity.",
+      architecture: "Public/private subnet split across multiple AZs, an Application Load Balancer fronting an Auto Scaling web tier, and a Multi-AZ RDS instance in an isolated data subnet with no direct internet exposure.",
+      features: [
+        "Entire environment rebuildable from scratch via Terraform in under 15 minutes",
+        "Multi-AZ RDS for automatic failover",
+        "Auto Scaling policies tied to CloudWatch metrics",
+        "99.9% availability SLA achieved",
+      ],
+      challenges: "Modeling security group and NACL rules so the private data tier stayed fully unreachable from the internet while still allowing health checks and app-tier traffic took a few iterations to get right.",
+      learned: "Why 'highly available' is a network design problem as much as a compute one — most of the resilience lives in subnet and routing decisions, not instance counts.",
+      github: "https://github.com/harishkumar-74",
+    },
+    {
+      id: 3,
+      name: "Datadog + Prometheus Observability Stack",
+      tagline: "Full-stack observability across Kubernetes and EC2",
+      stack: ["Datadog", "Prometheus", "Grafana", "CloudWatch"],
+      overview: "An observability stack layered across Kubernetes pods and EC2 instances combining APM traces, infrastructure metrics, and centralized logs.",
+      problem: "Incidents were being detected by users before they were detected by the team — metrics existed but weren't wired into anything anyone actually watched.",
+      architecture: "Datadog agents run as a DaemonSet across the cluster and on EC2 hosts, exporting APM + infra metrics alongside a parallel Prometheus + Grafana stack for SLO/SLI dashboards, with CloudWatch as the AWS-native metrics source of truth.",
+      features: [
+        "SLO/SLI dashboards in Grafana",
+        "Unified logs, metrics and traces in one pane of glass",
+        "Cut mean-time-to-detect (MTTD) by 45%",
+        "Cut mean-time-to-resolve (MTTR) by 30%",
+      ],
+      challenges: "Avoiding alert fatigue — the first pass generated far too many low-value alerts, so alert thresholds and routing had to be redesigned around actual SLOs instead of raw metric thresholds.",
+      learned: "Dashboards that no one looks at during an incident aren't observability, they're decoration — the alerting and on-call routing matter more than the dashboard itself.",
+      github: "https://github.com/harishkumar-74",
+    },
+    {
+      id: 4,
+      name: "Terraform Infrastructure Automation",
+      tagline: "Reusable, drift-detected AWS provisioning at the module level",
+      stack: ["Terraform", "AWS", "S3 Backend", "DynamoDB State Lock", "Jenkins"],
+      overview: "A library of reusable Terraform modules for provisioning AWS infrastructure, backed by remote state with locking and wired into CI for drift detection.",
+      problem: "Infrastructure changes made by hand outside of Terraform silently drifted from what was declared in code, and state files stored locally created conflicts across the team.",
+      architecture: "Remote state in S3 with DynamoDB-based state locking prevents concurrent-apply conflicts; Jenkins runs scheduled `terraform plan` jobs against the live environment and flags drift automatically.",
+      features: [
+        "Reusable modules for VPC, compute, and data-tier resources",
+        "Remote state + locking — safe for team collaboration",
+        "Automated drift detection via scheduled Jenkins plans",
+        "Reduced manual provisioning effort by 60%",
+      ],
+      challenges: "Designing module interfaces generic enough to reuse across environments without becoming an unreadable pile of conditionals took a few refactors to get right.",
+      learned: "The value of Terraform isn't 'infrastructure as code', it's infrastructure as a *reviewable diff* — the plan output became the real change-management process.",
+      github: "https://github.com/harishkumar-74",
+    },
+    {
+      id: 5,
+      name: "FastAPI Microservice GitOps Platform",
+      tagline: "A dual-repo GitOps workflow for a microservices app",
+      stack: ["FastAPI", "Docker", "Kubernetes", "Jenkins", "ECR", "GitOps"],
+      overview: "A microservices application (auth, users, todo, savings-plan, login/dashboard) split into independently deployable services, delivered through a dual-repository GitOps workflow.",
+      problem: "A single monolithic deploy pipeline made it impossible to ship one service without re-testing and re-deploying everything else.",
+      architecture: "An application repo holds service source code; a separate manifests/GitOps repo holds Kubernetes deployment definitions. Jenkins checks out source, tags images, runs SonarQube analysis, builds Docker images, scans with Trivy, pushes to ECR, then updates the manifests repo — which a GitOps controller syncs to the cluster.",
+      features: [
+        "Independent microservices for auth, users, todo, and savings",
+        "Clean separation between application code and deployment state",
+        "Automated image tagging and manifest updates from Jenkins",
+        "Security scanning (SonarQube + Trivy) on every service build",
+      ],
+      challenges: "Keeping the two repositories (app + manifests) in sync without race conditions when multiple services deployed at once required careful pipeline sequencing.",
+      learned: "Why most GitOps setups eventually split app code from deploy config — it's the cleanest way to make 'what's running' a pure function of a Git commit.",
+      github: "https://github.com/harishkumar-74",
+    },
+  ],
+
+  fortunes: [
+    "It works on my machine ¯\\_(ツ)_/¯ → containerize it.",
+    "There is no cloud, it's just someone else's computer... that I monitor very closely.",
+    "99% of DevOps is naming things: pipelines, branches, and your shame.",
+    "A YAML file walks into a bar. Indentation error. Bar closes.",
+    "Friends don't let friends SSH into production on a Friday.",
+    "Infrastructure as Code: because clicking buttons doesn't scale, or forgive.",
+    "The best alert is the one that pages you before the customer does.",
+    "Kubernetes: making 'it restarted itself' a legitimate incident update since 2015.",
+  ],
+
+  motivations: [
+    "Every outage you've debugged is a system you understand better than anyone else on the team.",
+    "Automate the boring 60% so you have energy for the interesting 40%.",
+    "Ship small, ship often, roll back calmly.",
+    "The pipeline you build today is the on-call shift you don't get paged for tonight.",
+    "Read the postmortem. Then read it again in six months.",
+  ],
+};
+
+/* =====================================================================
+   MODULE: RENDERERS
+   Pure functions that turn PortfolioData into HTML strings.
+   Kept separate from the command handlers so content formatting can
+   change without touching command logic.
+   ===================================================================== */
+const Renderers = (() => {
+  const esc = Utils.escapeHtml;
+
+  const aboutBlock = () => {
+    const { identity, about } = PortfolioData;
+    return `<div class="out">
+      <p><span class="c-cyan">╭─</span> <b>${esc(identity.name)}</b> <span class="dim">/ ${esc(identity.role)}</span></p>
+      <p>${about.map(esc).join("<br>")}</p>
+    </div>`;
+  };
+
+  const skillsBlock = () => {
+    const rows = PortfolioData.skills.map((s, i) => `
+      <div class="skillbar-row">
+        <span>${esc(s.name)}</span>
+        <div class="skillbar-track"><div class="skillbar-fill" data-target="${s.level}" style="transition-delay:${i * 45}ms;"></div></div>
+        <span class="skillbar-val">${s.level}%</span>
+      </div>`).join("");
+    return `<div class="out"><p class="c-cyan">skills.txt</p>${rows}</div>`;
+  };
+
+  const certsBlock = () => {
+    const items = PortfolioData.certifications
+      .map((c) => `<li>${esc(c)}</li>`)
+      .join("");
+    return `<div class="out"><p class="c-cyan">certifications.txt</p><ul>${items}</ul></div>`;
+  };
+
+  const contactBlock = () => {
+    const { identity } = PortfolioData;
+    return `<div class="out">
+      <p class="c-cyan">contact.txt</p>
+      <p>email &nbsp;&nbsp;: <a href="mailto:${identity.email}">${esc(identity.email)}</a> <span class="dim">(type 'copy email')</span></p>
+      <p>github &nbsp; : <a href="${identity.github}" target="_blank" rel="noopener">${esc(identity.githubHandle)}</a></p>
+      <p>linkedin: <a href="${identity.linkedin}" target="_blank" rel="noopener">${esc(identity.linkedinHandle)}</a></p>
+      <p>location: ${esc(identity.location)}</p>
+      <p class="dim">${esc(identity.status)}</p>
+    </div>`;
+  };
+
+  const experienceBlock = () => {
+    const items = PortfolioData.experience.map((e) => `
+      <div class="tl-item">
+        <div class="tl-role">${esc(e.role)} <span class="dim">@ ${esc(e.org)}</span></div>
+        <div class="tl-meta">${esc(e.loc)} · ${esc(e.period)}</div>
+        <ul>${e.points.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>
+      </div>`).join("");
+    return `<div class="out"><p class="c-cyan">experience.txt</p><div class="timeline">${items}</div></div>`;
+  };
+
+  const educationBlock = () => {
+    const items = PortfolioData.education.map((ed) => `
+      <p><b>${esc(ed.degree)}</b><br><span class="dim">${esc(ed.school)} · ${esc(ed.period)}</span></p>
+    `).join("");
+    return `<div class="out"><p class="c-cyan">education.txt</p>${items}</div>`;
+  };
+
+  const projectListBlock = () => {
+    const rows = PortfolioData.projects.map((p) => `
+      <div class="card">
+        <div class="card-title">[${p.id}] ${esc(p.name)}</div>
+        <div class="card-sub">${esc(p.tagline)}</div>
+        <div>${p.stack.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div>
+        <p class="dim" style="margin-top:8px;">↳ type <b class="c-yellow">project ${p.id}</b> for full details</p>
+      </div>`).join("");
+    return `<div class="out"><p class="c-cyan">~/projects $ ls -la</p>${rows}</div>`;
+  };
+
+  const projectDetailBlock = (p) => {
+    if (!p) return null;
+    return `<div class="out">
+      <div class="card">
+        <div class="card-title">${esc(p.name)}</div>
+        <div class="card-sub">${esc(p.tagline)}</div>
+        <div style="margin-bottom:10px;">${p.stack.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div>
+        <p><span class="c-cyan">Overview</span><br>${esc(p.overview)}</p>
+        <p><span class="c-cyan">Problem Statement</span><br>${esc(p.problem)}</p>
+        <p><span class="c-cyan">Architecture</span><br>${esc(p.architecture)}</p>
+        <p><span class="c-cyan">Key Features</span></p>
+        <ul>${p.features.map((f) => `<li>${esc(f)}</li>`).join("")}</ul>
+        <p><span class="c-cyan">Challenges Faced</span><br>${esc(p.challenges)}</p>
+        <p><span class="c-cyan">What I Learned</span><br>${esc(p.learned)}</p>
+        <p><span class="c-cyan">Repository</span><br><a href="${p.github}" target="_blank" rel="noopener">${esc(p.github)}</a></p>
+      </div>
+    </div>`;
+  };
+
+  const neofetchBlock = () => {
+    const art = `      .--.          
+     |o_o |         
+     |:_/ |         
+    //   \\ \\        
+   (|     | )       
+  /'\\_   _/\`\\       
+  \\___)=(___/       `;
+    const info = [
+      ["harish@cloud", "-----------"],
+      ["OS", "HarishOS 26.04 LTS (DevOps Edition)"],
+      ["Host", "Cloud & DevOps Engineer"],
+      ["Kernel", "6.9.0-devops-cloud"],
+      ["Uptime", "__UPTIME__"],
+      ["Packages", "1847 (aws, docker, k8s, terraform, jenkins)"],
+      ["Shell", "zsh 5.9 (interactive-portfolio)"],
+      ["Resolution", "responsive x responsive"],
+      ["DE", "tmux + neovim"],
+      ["Theme", "Terminal-Green [GTK3]"],
+      ["CPU", "Cloud Architecture (∞) @ 3.8GHz"],
+      ["GPU", "Kubernetes Rendering Engine"],
+      ["Memory", "35MiB / 128MiB (DevSecOps cache warm)"],
+    ];
+    const rows = info.map(([k, v]) =>
+      `<span class="c-cyan">${esc(k)}</span>${k === "harish@cloud" ? "" : ":"} ${esc(v)}`
+    ).join("\n");
+    return { art, rowsTemplate: rows };
+  };
+
+  return {
+    aboutBlock, skillsBlock, certsBlock, contactBlock, experienceBlock,
+    educationBlock, projectListBlock, projectDetailBlock, neofetchBlock,
+  };
+})();
+
+/* =====================================================================
+   MODULE: COMMAND REGISTRY
+   The single source of truth for every command: its description
+   (shown in `help`), and its handler. Handlers receive (args, term)
+   and return either a string of HTML, an object {html}, or null
+   (if they already wrote output themselves, e.g. `clear`).
+   ===================================================================== */
+const CommandRegistry = (() => {
+  const registry = new Map(); // key: command signature string -> spec
+
+  function register(spec) {
+    registry.set(spec.name, spec);
+  }
+
+  const esc = Utils.escapeHtml;
+  const D = PortfolioData;
+
+  /* ---- core / filesystem-flavored commands ---- */
+
+  register({
+    name: "help",
+    aliases: ["?"],
+    usage: "help [--all]",
+    hidden: false,
+    description: "List available commands",
+    handler: (args) => {
+      const all = args.includes("--all");
+      const groups = [
+        { title: "core", cmds: [
+          ["help [--all]", "show this list (--all adds descriptions for every command)"],
+          ["whoami", "who I am, in one screen"],
+          ["pwd", "print working directory"],
+          ["ls", "list portfolio sections"],
+          ["tree", "show the full folder hierarchy"],
+          ["clear / Ctrl+L", "clear the screen"],
+          ["history", "show your command history"],
+          ["date", "current date & time"],
+          ["echo <text>", "print text back"],
+        ]},
+        { title: "content", cmds: [
+          ["cat about.txt", "professional summary & mission"],
+          ["cat skills.txt", "animated skill bars"],
+          ["cat experience.txt", "work experience timeline"],
+          ["cat certifications.txt", "certifications list"],
+          ["cat contact.txt", "how to reach me"],
+          ["cat education.txt", "academic background"],
+          ["projects", "list all projects"],
+          ["project <n>", "full case study for project n (1-5)"],
+          ["resume", "download my resume (PDF)"],
+          ["github", "open my GitHub profile"],
+          ["linkedin", "open my LinkedIn profile"],
+        ]},
+        { title: "system", cmds: [
+          ["neofetch", "system info banner"],
+          ["theme <green|blue|amber>", "switch color theme"],
+          ["matrix", "toggle matrix rain background"],
+          ["exit", "end the session"],
+        ]},
+      ];
+      let html = `<div class="out"><p class="c-cyan">Available commands${all ? " (full reference)" : ""}:</p>`;
+      groups.forEach((g) => {
+        html += `<p class="dim" style="margin:10px 0 2px;"># ${g.title}</p><div class="help-grid">`;
+        g.cmds.forEach(([cmd, desc]) => {
+          html += `<span class="cmd">${esc(cmd)}</span><span class="desc">${esc(desc)}</span>`;
+        });
+        html += `</div>`;
+      });
+      if (!all) {
+        html += `<p class="dim" style="margin-top:10px;">tip: run <span class="c-yellow">help --all</span>, or just start typing and press <b>Tab</b> — there are a few hidden commands too 👀</p>`;
+      }
+      html += `</div>`;
+      return html;
+    },
+  });
+
+  register({
+    name: "whoami",
+    usage: "whoami",
+    description: "Who I am, in one screen",
+    handler: () => `<div class="out">
+      <p><b class="c-white">${esc(D.identity.name)}</b><br>
+      <span class="c-cyan">${esc(D.identity.role)}</span></p>
+      <p>${D.about.slice(0, 3).map(esc).join("<br>")}</p>
+      <p class="dim">${esc(D.identity.status)}</p>
+    </div>`,
+  });
+
+  register({
+    name: "pwd",
+    usage: "pwd",
+    description: "Print working directory",
+    handler: () => `<div class="out">/home/harish/portfolio</div>`,
+  });
+
+  register({
+    name: "ls",
+    usage: "ls",
+    description: "List portfolio sections",
+    handler: () => `<div class="out c-cyan">about/&nbsp;&nbsp; skills/&nbsp;&nbsp; projects/&nbsp;&nbsp; experience/&nbsp;&nbsp; certifications/&nbsp;&nbsp; education/&nbsp;&nbsp; <span class="c-white">resume.pdf</span>&nbsp;&nbsp; <span class="c-white">contact.txt</span></div>`,
+  });
+
+  register({
+    name: "tree",
+    usage: "tree",
+    description: "Show the full folder hierarchy",
+    handler: () => `<div class="out ascii">~/portfolio
+├── about/
+│   └── about.txt
+├── skills/
+│   └── skills.txt
+├── experience/
+│   └── experience.txt
+├── certifications/
+│   └── certifications.txt
+├── education/
+│   └── education.txt
+├── projects/
+│   ├── 1-devsecops-cicd-pipeline/
+│   ├── 2-aws-3tier-ha-architecture/
+│   ├── 3-observability-stack/
+│   ├── 4-terraform-automation/
+│   └── 5-fastapi-microservice-gitops/
+├── resume.pdf
+└── contact.txt
+
+6 directories, 8 files</div>`,
+  });
+
+  register({
+    name: "clear",
+    usage: "clear",
+    description: "Clear the screen",
+    handler: (_args, term) => { term.clearScreen(); return null; },
+  });
+
+  register({
+    name: "history",
+    usage: "history",
+    description: "Show command history",
+    handler: (_args, term) => {
+      if (term.history.length === 0) return `<div class="out dim">(no history yet)</div>`;
+      const rows = term.history.map((h, i) => `<div>${String(i + 1).padStart(3, " ")}&nbsp; ${esc(h)}</div>`).join("");
+      return `<div class="out">${rows}</div>`;
+    },
+  });
+
+  register({
+    name: "date",
+    usage: "date",
+    description: "Current date & time",
+    handler: () => `<div class="out">${esc(new Date().toString())}</div>`,
+  });
+
+  register({
+    name: "echo",
+    usage: "echo <text>",
+    description: "Print text back",
+    handler: (args) => `<div class="out">${esc(args.join(" "))}</div>`,
+  });
+
+  /* ---- content commands ---- */
+
+  register({ name: "cat about.txt", usage: "cat about.txt", description: "Professional summary & mission", handler: () => Renderers.aboutBlock() });
+  register({ name: "cat skills.txt", usage: "cat skills.txt", description: "Animated skill bars", handler: () => Renderers.skillsBlock() });
+  register({ name: "cat experience.txt", usage: "cat experience.txt", description: "Work experience timeline", handler: () => Renderers.experienceBlock() });
+  register({ name: "cat certifications.txt", usage: "cat certifications.txt", description: "Certifications list", handler: () => Renderers.certsBlock() });
+  register({ name: "cat contact.txt", usage: "cat contact.txt", description: "How to reach me", handler: () => Renderers.contactBlock() });
+  register({ name: "cat education.txt", usage: "cat education.txt", description: "Academic background", handler: () => Renderers.educationBlock() });
+
+  register({
+    name: "resume",
+    usage: "resume",
+    description: "Download my resume (PDF)",
+    handler: () => {
+      const a = document.createElement("a");
+      a.href = D.identity.resumeFile;
+      a.download = "Harish_Kumar_S_Resume.pdf";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      return `<div class="out c-green">Downloading resume.pdf... <span class="dim">↳ if nothing happened, <a href="${D.identity.resumeFile}" target="_blank">click here</a></span></div>`;
+    },
+  });
+
+  register({
+    name: "github",
+    usage: "github",
+    description: "Open my GitHub profile",
+    handler: () => { window.open(D.identity.github, "_blank"); return `<div class="out">Opening <a href="${D.identity.github}" target="_blank">${esc(D.identity.githubHandle)}</a>...</div>`; },
+  });
+
+  register({
+    name: "linkedin",
+    usage: "linkedin",
+    description: "Open my LinkedIn profile",
+    handler: () => { window.open(D.identity.linkedin, "_blank"); return `<div class="out">Opening <a href="${D.identity.linkedin}" target="_blank">${esc(D.identity.linkedinHandle)}</a>...</div>`; },
+  });
+
+  register({
+    name: "projects",
+    usage: "projects",
+    description: "List all projects",
+    handler: () => Renderers.projectListBlock(),
+  });
+
+  register({
+    name: "project",
+    usage: "project <n>",
+    description: "Full case study for project n (1-5)",
+    handler: (args) => {
+      const n = parseInt(args[0], 10);
+      const p = D.projects.find((pr) => pr.id === n);
+      if (!p) {
+        return `<div class="out c-red">No project #${esc(args[0] || "")} found. Try: <span class="c-yellow">projects</span></div>`;
+      }
+      return Renderers.projectDetailBlock(p);
+    },
+  });
+
+  register({
+    name: "copy email",
+    usage: "copy email",
+    description: "Copy my email to clipboard",
+    handler: async () => {
+      const ok = await Utils.copyToClipboard(D.identity.email);
+      return `<div class="out ${ok ? "c-green" : "c-yellow"}">${ok ? `Copied ${esc(D.identity.email)} to clipboard ✓` : `Couldn't access clipboard — email is ${esc(D.identity.email)}`}</div>`;
+    },
+  });
+
+  /* ---- system / cosmetic commands ---- */
+
+  register({
+    name: "neofetch",
+    usage: "neofetch",
+    description: "System info banner",
+    handler: (_args, term) => {
+      const { art, rowsTemplate } = Renderers.neofetchBlock();
+      const rows = rowsTemplate.replace("__UPTIME__", Utils.formatUptime(term.uptimeMs()));
+      return `<div class="out"><div style="display:flex; gap:28px; flex-wrap:wrap;">
+        <pre class="ascii a-cyan">${esc(art)}</pre>
+        <pre class="ascii">${rows}</pre>
+      </div></div>`;
+    },
+  });
+
+  register({
+    name: "theme",
+    usage: "theme <green|blue|amber>",
+    description: "Switch color theme",
+    handler: (args, term) => {
+      const t = (args[0] || "").toLowerCase();
+      if (!["green", "blue", "amber"].includes(t)) {
+        return `<div class="out c-yellow">usage: theme &lt;green|blue|amber&gt;</div>`;
+      }
+      term.setTheme(t);
+      return `<div class="out c-green">Theme switched to '${t}'.</div>`;
+    },
+  });
+
+  register({
+    name: "matrix",
+    usage: "matrix",
+    description: "Toggle matrix rain background",
+    handler: (_args, term) => {
+      const on = term.toggleMatrix();
+      return `<div class="out c-green">Matrix rain ${on ? "enabled" : "disabled"}.</div>`;
+    },
+  });
+
+  register({
+    name: "exit",
+    usage: "exit",
+    description: "End the session",
+    handler: (_args, term) => {
+      term.lockInput();
+      return `<div class="out c-red">Session closed.<br><span class="dim">Refresh to reconnect.</span></div>`;
+    },
+  });
+
+  /* ---- easter eggs (hidden from help by default) ---- */
+
+  register({
+    name: "sudo hire-me",
+    usage: "sudo hire-me",
+    description: "🥚",
+    hidden: true,
+    handler: () => `<div class="out c-green">[sudo] password for recruiter: ****<br>Permission granted.<br><b class="c-cyan">Congratulations. You just hired a DevOps Engineer.</b></div>`,
+  });
+
+  register({
+    name: "sudo rm -rf /",
+    usage: "sudo rm -rf /",
+    description: "🥚",
+    hidden: true,
+    handler: () => `<div class="out c-yellow">Nice try 🙂<br>This portfolio is protected by Kubernetes.</div>`,
+  });
+
+  register({
+    name: "hack",
+    usage: "hack",
+    description: "🥚",
+    hidden: true,
+    handler: () => `<div class="out c-red">Access denied.<br>CloudTrail has already logged your IP.</div>`,
+  });
+
+  register({
+    name: "coffee",
+    usage: "coffee",
+    description: "🥚",
+    hidden: true,
+    handler: () => `<div class="out">Brewing coffee<span class="dim">...</span> ☕<br><span class="c-green">Deployment success rate increased.</span></div>`,
+  });
+
+  register({
+    name: "docker run life",
+    usage: "docker run life",
+    description: "🥚",
+    hidden: true,
+    handler: () => `<div class="out">Unable to find image 'life:latest' locally<br>latest: Pulling from library/life<br>Container started...<br>Learning...<br>Building...<br>Growing...<br><span class="c-green">Status: running indefinitely</span></div>`,
+  });
+
+  register({
+    name: "npm install confidence",
+    usage: "npm install confidence",
+    description: "🥚",
+    hidden: true,
+    handler: () => `<div class="out">
+added 1 package in 0.4s<br>
+<span class="c-green">Confidence installed successfully.</span></div>`,
+  });
+
+  register({
+    name: "fortune",
+    usage: "fortune",
+    description: "🥚",
+    hidden: true,
+    handler: () => `<div class="out c-cyan">${esc(Utils.randomOf(D.fortunes))}</div>`,
+  });
+
+  register({
+    name: "motivation",
+    usage: "motivation",
+    description: "🥚",
+    hidden: true,
+    handler: () => `<div class="out c-cyan">${esc(Utils.randomOf(D.motivations))}</div>`,
+  });
+
+  register({
+    name: "deploy",
+    usage: "deploy",
+    description: "🥚",
+    hidden: true,
+    handler: async (_args, term) => {
+      const id = term.newOutputBlock();
+      const steps = [
+        "Building image...........",
+        "Pushing to registry......",
+        "Running SonarQube scan...",
+        "Scanning image (Trivy)...",
+        "Applying Helm chart......",
+        "Rolling out pods.........",
+      ];
+      for (const s of steps) {
+        term.appendToBlock(id, `<div>${esc(s)} <span class="c-green">[OK]</span></div>`);
+        await Utils.sleep(260);
+      }
+      term.appendToBlock(id, `<div class="c-green" style="margin-top:6px;">✔ Deployment successful — 0 downtime, 6/6 pods ready.</div>`);
+      return null;
+    },
+  });
+
+  register({
+    name: "kubectl get pods",
+    usage: "kubectl get pods",
+    description: "🥚",
+    hidden: true,
+    handler: () => `<div class="out"><table class="tty">
+      <tr><th>NAME</th><th>READY</th><th>STATUS</th><th>RESTARTS</th><th>AGE</th></tr>
+      <tr><td>portfolio-frontend-7d8f9c-2xk4q</td><td>1/1</td><td class="c-green">Running</td><td>0</td><td>14d</td></tr>
+      <tr><td>auth-service-5b6b7d-9pl2r</td><td>1/1</td><td class="c-green">Running</td><td>1</td><td>21d</td></tr>
+      <tr><td>todo-service-6c9d4f-7mn1x</td><td>1/1</td><td class="c-green">Running</td><td>0</td><td>21d</td></tr>
+      <tr><td>savings-service-8a2e1b-3qw8z</td><td>1/1</td><td class="c-green">Running</td><td>0</td><td>21d</td></tr>
+      <tr><td>argocd-server-59f7c8-4rt6y</td><td>1/1</td><td class="c-green">Running</td><td>0</td><td>90d</td></tr>
+      <tr><td>prometheus-server-0</td><td>1/1</td><td class="c-green">Running</td><td>2</td><td>90d</td></tr>
+    </table></div>`,
+  });
+
+  register({
+    name: "terraform apply",
+    usage: "terraform apply",
+    description: "🥚",
+    hidden: true,
+    handler: async (_args, term) => {
+      const id = term.newOutputBlock();
+      term.appendToBlock(id, `<div class="dim">Terraform will perform the following actions:</div>`);
+      await Utils.sleep(200);
+      term.appendToBlock(id, `<div><span class="c-green">+</span> module.vpc.aws_vpc.main will be created</div><div><span class="c-green">+</span> module.eks.aws_eks_cluster.this will be created</div><div><span class="c-green">+</span> module.rds.aws_db_instance.primary will be created</div>`);
+      await Utils.sleep(300);
+      term.appendToBlock(id, `<div class="dim" style="margin-top:6px;">Plan: 24 to add, 0 to change, 0 to destroy.</div>`);
+      await Utils.sleep(500);
+      term.appendToBlock(id, `<div class="c-green" style="margin-top:6px;">Apply complete! Resources: 24 added, 0 changed, 0 destroyed.</div>`);
+      return null;
+    },
+  });
+
+  register({
+    name: "aws s3 ls",
+    usage: "aws s3 ls",
+    description: "🥚",
+    hidden: true,
+    handler: () => `<div class="out">2026-06-02 09:14:03&nbsp; harish-tf-remote-state<br>2026-05-11 17:02:41&nbsp; harish-devsecops-artifacts<br>2026-04-20 08:55:12&nbsp; harish-portfolio-assets<br>2026-02-18 12:31:09&nbsp; harish-cloudtrail-logs</div>`,
+  });
+
+  register({
+    name: "git status",
+    usage: "git status",
+    description: "🥚",
+    hidden: true,
+    handler: () => `<div class="out">On branch main<br>Your branch is up to date with 'origin/main'.<br><br>nothing to commit, working tree clean</div>`,
+  });
+
+  register({
+    name: "git log",
+    usage: "git log",
+    description: "🥚",
+    hidden: true,
+    handler: () => `<div class="out">
+<span class="c-yellow">commit 9f1a3c2</span> (HEAD -&gt; main, origin/main)<br>
+Author: Harish Kumar S<br>
+&nbsp;&nbsp;&nbsp;&nbsp;fix: reduce Jenkins pipeline runtime by parallelizing scan stages<br><br>
+<span class="c-yellow">commit 6e7bd41</span><br>
+Author: Harish Kumar S<br>
+&nbsp;&nbsp;&nbsp;&nbsp;feat: add Trivy image scanning gate to CI/CD pipeline<br><br>
+<span class="c-yellow">commit 4ab019c</span><br>
+Author: Harish Kumar S<br>
+&nbsp;&nbsp;&nbsp;&nbsp;feat: migrate manual EC2 provisioning to Terraform modules
+</div>`,
+  });
+
+  return {
+    all: () => registry,
+    get: (name) => registry.get(name),
+    names: () => Array.from(registry.keys()),
+    visibleNames: () => Array.from(registry.values()).filter((s) => !s.hidden).map((s) => s.name),
+  };
+})();
+
+/* =====================================================================
+   MODULE: PARSER
+   Turns raw input into a matched command spec + args. Commands can be
+   multi-word ("git status", "sudo hire-me"); the parser tries the
+   longest possible match against the registry before falling back to
+   single-word-command-plus-arguments.
+   ===================================================================== */
+const Parser = (() => {
+  const normalize = (raw) => raw.trim().replace(/\s+/g, " ");
+
+  function parse(raw) {
+    const input = normalize(raw);
+    if (input === "") return { spec: null, args: [], input };
+
+    const lower = input.toLowerCase();
+
+    // 1) exact whole-string match (covers multi-word commands & 0-arg commands)
+    let spec = CommandRegistry.get(lower);
+    if (spec) return { spec, args: [], input };
+
+    // 2) special-case: "cat <file>" — match "cat X" against "cat X" keys directly
+    //    (already covered by exact match above since files are fixed names)
+
+    // 3) try progressively shorter prefixes for multi-word commands with args
+    //    e.g. "project 3" -> spec "project", args ["3"]
+    const tokens = lower.split(" ");
+    for (let len = tokens.length - 1; len >= 1; len--) {
+      const prefix = tokens.slice(0, len).join(" ");
+      spec = CommandRegistry.get(prefix);
+      if (spec) {
+        const argTokens = input.split(" ").slice(len);
+        return { spec, args: argTokens, input };
+      }
+    }
+
+    // 4) single first-word command (echo, unknown, etc.)
+    const first = tokens[0];
+    spec = CommandRegistry.get(first);
+    if (spec) {
+      const argTokens = input.split(" ").slice(1);
+      return { spec, args: argTokens, input };
+    }
+
+    return { spec: null, args: [], input };
+  }
+
+  function suggest(input) {
+    const lower = input.toLowerCase();
+    const candidates = CommandRegistry.visibleNames();
+    let best = null, bestDist = Infinity;
+    for (const c of candidates) {
+      const d = Utils.levenshtein(lower, c);
+      if (d < bestDist) { bestDist = d; best = c; }
+    }
+    return bestDist <= 3 ? best : null;
+  }
+
+  return { parse, suggest, normalize };
+})();
+
+/* =====================================================================
+   MODULE: TERMINAL ENGINE
+   Owns DOM state for the shell: printing, prompt, history, matrix
+   toggle, theming, uptime, and command execution.
+   ===================================================================== */
+class TerminalEngine {
+  constructor() {
+    this.screen = document.getElementById("screen");
+    this.input = document.getElementById("cmd-input");
+    this.ghost = document.getElementById("ghost");
+    this.promptLabel = document.getElementById("prompt-label");
+    this.uptimeEl = document.getElementById("tb-uptime");
+
+    this.history = [];
+    this.historyPos = -1;
+    this.locked = false;
+    this.startTime = Date.now();
+    this.matrixOn = false;
+    this.blockCounter = 0;
+    this.theme = "green";
+
+    this.renderPrompt();
+    this.bindEvents();
+    setInterval(() => this.updateUptime(), 1000);
+  }
+
+  uptimeMs() { return Date.now() - this.startTime; }
+  updateUptime() { this.uptimeEl.textContent = `uptime ${Utils.formatUptime(this.uptimeMs())}`; }
+
+  renderPrompt() {
+    this.promptLabel.innerHTML =
+      `<span class="p-user">harish</span><span class="p-at">@</span><span class="p-host">cloud</span>:<span class="p-path">~/portfolio</span><span class="p-dollar">$</span>&nbsp;`;
+  }
+
+  print(html) {
+    const div = document.createElement("div");
+    div.innerHTML = html;
+    this.screen.appendChild(div);
+    this.scrollToEnd();
+  }
+
+  printEcho(commandText) {
+    const div = document.createElement("div");
+    div.className = "line echo";
+    div.innerHTML =
+      `<span class="prompt-seg">harish@cloud</span>:<span class="path-seg">~/portfolio</span>$ ${Utils.escapeHtml(commandText)}`;
+    this.screen.appendChild(div);
+    this.scrollToEnd();
+  }
+
+  newOutputBlock() {
+    this.blockCounter += 1;
+    const id = `blk-${this.blockCounter}`;
+    const div = document.createElement("div");
+    div.className = "out";
+    div.id = id;
+    this.screen.appendChild(div);
+    this.scrollToEnd();
+    return id;
+  }
+
+  appendToBlock(id, html) {
+    const el = document.getElementById(id);
+    if (el) el.insertAdjacentHTML("beforeend", html);
+    this.scrollToEnd();
+  }
+
+  clearScreen() { this.screen.innerHTML = ""; }
+
+  scrollToEnd() { this.screen.scrollTop = this.screen.scrollHeight; }
+
+  lockInput() {
+    this.locked = true;
+    this.input.disabled = true;
+    this.input.placeholder = "";
+  }
+
+  setTheme(t) {
+    this.theme = t;
+    if (t === "green") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme", t);
+  }
+
+  cycleTheme() {
+    const order = ["green", "blue", "amber"];
+    const next = order[(order.indexOf(this.theme) + 1) % order.length];
+    this.setTheme(next);
+    this.print(`<div class="out c-green">Theme switched to '${next}'.</div>`);
+  }
+
+  toggleMatrix() {
+    this.matrixOn = !this.matrixOn;
+    MatrixRain.setActive(this.matrixOn);
+    return this.matrixOn;
+  }
+
+  async runInitial(cmd) {
+    await this.execute(cmd, { silentEcho: true });
+  }
+
+  async execute(raw, opts = {}) {
+    const trimmed = raw;
+    if (!opts.silentEcho) this.printEcho(trimmed);
+    if (trimmed.trim() === "") return;
+
+    this.history.push(trimmed.trim());
+    this.historyPos = this.history.length;
+
+    const { spec, args } = Parser.parse(trimmed);
+
+    if (!spec) {
+      const suggestion = Parser.suggest(trimmed.trim());
+      this.print(
+        `<div class="out c-red">command not found: ${Utils.escapeHtml(trimmed.trim())}${
+          suggestion ? `<br><span class="dim">Did you mean '<b class="c-yellow">${Utils.escapeHtml(suggestion)}</b>'?</span>` : `<br><span class="dim">type 'help' to see available commands</span>`
+        }</div>`
+      );
+      return;
+    }
+
+    try {
+      const result = await spec.handler(args, this);
+      if (result) this.print(result);
+    } catch (err) {
+      this.print(`<div class="out c-red">internal error: ${Utils.escapeHtml(String(err && err.message ? err.message : err))}</div>`);
+    }
+  }
+
+  /* ---- input event wiring: autocomplete, history, shortcuts ---- */
+  bindEvents() {
+    this.input.addEventListener("keydown", (e) => this.onKeyDown(e));
+    this.input.addEventListener("input", () => this.updateGhost());
+    document.addEventListener("keydown", (e) => {
+      if (e.ctrlKey && (e.key === "l" || e.key === "L")) {
+        e.preventDefault();
+        this.clearScreen();
+      }
+    });
+    this.screen.addEventListener("click", () => this.input.focus());
+    document.getElementById("terminal").addEventListener("click", () => this.input.focus());
+  }
+
+  updateGhost() {
+    const val = this.input.value;
+    if (!val) { this.ghost.textContent = ""; return; }
+    const match = CommandRegistry.visibleNames()
+      .filter((n) => n.startsWith(val.toLowerCase()) && n !== val.toLowerCase())
+      .sort((a, b) => a.length - b.length)[0];
+    this.ghost.textContent = match ? match : "";
+  }
+
+  onKeyDown(e) {
+    if (this.locked) { e.preventDefault(); return; }
+
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const val = this.input.value;
+      this.input.value = "";
+      this.ghost.textContent = "";
+      this.execute(val);
+      return;
+    }
+
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const val = this.input.value.trim().toLowerCase();
+      if (!val) return;
+      const matches = CommandRegistry.visibleNames().filter((n) => n.startsWith(val));
+      if (matches.length === 1) {
+        this.input.value = matches[0] + " ";
+      } else if (matches.length > 1) {
+        this.print(`<div class="out dim">${matches.map(Utils.escapeHtml).join("&nbsp;&nbsp; ")}</div>`);
+      }
+      this.updateGhost();
+      return;
+    }
+
+    if (e.key === "ArrowRight" && this.input.selectionStart === this.input.value.length && this.ghost.textContent) {
+      this.input.value = this.ghost.textContent;
+      this.ghost.textContent = "";
+      return;
+    }
+
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (this.history.length === 0) return;
+      this.historyPos = Math.max(0, this.historyPos - 1);
+      this.input.value = this.history[this.historyPos] || "";
+      this.updateGhost();
+      return;
+    }
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (this.history.length === 0) return;
+      this.historyPos = Math.min(this.history.length, this.historyPos + 1);
+      this.input.value = this.history[this.historyPos] || "";
+      this.updateGhost();
+      return;
+    }
+  }
+}
+
+/* =====================================================================
+   MODULE: MATRIX RAIN (bonus, off by default, subtle when on)
+   ===================================================================== */
+const MatrixRain = (() => {
+  const canvas = document.getElementById("matrix-canvas");
+  const ctx = canvas.getContext("2d");
+  let raf = null;
+  let cols = [];
+  const chars = "01アイウエオカキクケコ$#@&%".split("");
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const fontSize = 15;
+    const count = Math.floor(canvas.width / fontSize);
+    cols = new Array(count).fill(0);
+  }
+
+  function frame() {
+    ctx.fillStyle = "rgba(9,9,9,0.12)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--green").trim() || "#39d97a";
+    ctx.font = "15px monospace";
+    cols.forEach((y, i) => {
+      const text = chars[Math.floor(Math.random() * chars.length)];
+      const x = i * 15;
+      ctx.fillText(text, x, y);
+      if (y > canvas.height && Math.random() > 0.975) cols[i] = 0;
+      else cols[i] = y + 15;
+    });
+    raf = requestAnimationFrame(frame);
+  }
+
+  function setActive(on) {
+    if (on) {
+      canvas.style.display = "block";
+      resize();
+      if (!raf) raf = requestAnimationFrame(frame);
+    } else {
+      canvas.style.display = "none";
+      if (raf) cancelAnimationFrame(raf);
+      raf = null;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+
+  window.addEventListener("resize", () => { if (canvas.style.display === "block") resize(); });
+
+  return { setActive };
+})();
+
+/* =====================================================================
+   MODULE: BOOT SEQUENCE
+   Simulated Linux boot, then hands off to the TerminalEngine.
+   ===================================================================== */
+const BootSequence = (() => {
+  const logEl = document.getElementById("boot-log");
+  const bootScreen = document.getElementById("boot-screen");
+  const terminalEl = document.getElementById("terminal");
+  const skipBtn = document.getElementById("boot-skip");
+
+  const steps = [
+    { t: "0.000000", text: "HarishOS Kernel 6.9.0-devops-cloud booting on x86_64...", cls: "boot-dim" },
+    { t: "0.142013", text: "Initializing DevOps Portfolio kernel modules", bar: true },
+    { t: "0.389442", text: "Loading AWS modules", ok: true },
+    { t: "0.612205", text: "Loading Kubernetes control plane", ok: true },
+    { t: "0.844471", text: "Starting Docker Engine", ok: true },
+    { t: "1.021982", text: "Loading Terraform providers", ok: true },
+    { t: "1.256730", text: "Mounting Git filesystem at /home/harish", ok: true },
+    { t: "1.498120", text: "Establishing secure connection to github.com", ok: true },
+    { t: "1.723300", text: "Starting DevSecOps toolchain (sonarqube, trivy)", ok: true },
+    { t: "1.982211", text: "Starting observability stack (prometheus, grafana)", ok: true },
+    { t: "2.201044", text: "Bringing up network interface eth0... ", ok: true, extra: "192.168.10.74/24" },
+    { t: "2.410932", text: "Starting shell", ok: true },
+  ];
+
+  function lineHTML(step) {
+    const tag = `<span class="boot-dim">[</span><span class="c-cyan">${step.t}</span><span class="boot-dim">]</span>`;
+    if (step.ok) {
+      return `${tag} ${step.text}${step.extra ? `<span class="boot-dim"> ${step.extra}</span>` : ""} <span class="boot-ok">[  OK  ]</span>`;
+    }
+    return `${tag} ${step.text}`;
+  }
+
+  async function run() {
+    let skipped = false;
+    const onSkip = () => { skipped = true; };
+    skipBtn.addEventListener("click", onSkip);
+
+    for (const step of steps) {
+      if (skipped) break;
+      const div = document.createElement("div");
+      div.className = "boot-line";
+      logEl.appendChild(div);
+
+      if (step.bar) {
+        div.innerHTML = `<span class="boot-dim">[</span><span class="c-cyan">${step.t}</span><span class="boot-dim">]</span> ${step.text}<span class="boot-bar-track"><span class="boot-bar-fill"></span></span>`;
+        const fill = div.querySelector(".boot-bar-fill");
+        for (let p = 0; p <= 100 && !skipped; p += 20) {
+          fill.style.width = p + "%";
+          await Utils.sleep(45);
+        }
+      } else {
+        div.innerHTML = lineHTML(step);
+        await Utils.sleep(skipped ? 0 : 130);
+      }
+    }
+
+    if (!skipped) await Utils.sleep(280);
+
+    const welcome = document.createElement("div");
+    welcome.className = "boot-line";
+    welcome.style.marginTop = "18px";
+    welcome.innerHTML =
+      `<pre class="ascii a-cyan" style="font-size:11px;">` +
+      `██╗  ██╗ █████╗ ██████╗ ██╗███████╗██╗  ██╗\n` +
+      `██║  ██║██╔══██╗██╔══██╗██║██╔════╝██║  ██║\n` +
+      `███████║███████║██████╔╝██║███████╗███████║\n` +
+      `██╔══██║██╔══██║██╔══██╗██║╚════██║██╔══██║\n` +
+      `██║  ██║██║  ██║██║  ██║██║███████║██║  ██║\n` +
+      `╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚══════╝╚═╝  ╚═╝` +
+      `</pre>` +
+      `<div class="c-white" style="margin-top:6px;">Welcome, Harish Kumar S — <span class="c-cyan">Cloud &amp; DevOps Engineer</span></div>` +
+      `<div class="boot-ok">System Ready.</div>`;
+    logEl.appendChild(welcome);
+    await Utils.sleep(skipped ? 60 : 500);
+
+    skipBtn.removeEventListener("click", onSkip);
+    bootScreen.classList.add("hidden");
+    terminalEl.style.display = "flex";
+
+    return skipped;
+  }
+
+  return { run };
+})();
+
+/* =====================================================================
+   MODULE: APP BOOTSTRAP
+   Wires everything together once the DOM is ready.
+   ===================================================================== */
+(async function init() {
+  await BootSequence.run();
+
+  const term = new TerminalEngine();
+  window.__term = term; // handy for debugging in devtools
+
+  // Titlebar buttons
+  document.getElementById("btn-theme").addEventListener("click", () => term.cycleTheme());
+  document.getElementById("btn-matrix").addEventListener("click", () => {
+    const on = term.toggleMatrix();
+    term.print(`<div class="out c-green">Matrix rain ${on ? "enabled" : "disabled"}.</div>`);
+  });
+
+  // Intro output, then focus input
+  term.print(`<div class="out">
+    <p>Type <b class="c-yellow">help</b> to see available commands, or <b class="c-yellow">whoami</b> to start with who I am.</p>
+    <p class="dim">Tab autocompletes · ↑/↓ browse history · Ctrl+L clears the screen</p>
+  </div>`);
+  await term.runInitial("neofetch");
+  term.input.focus();
+
+  // Animate skill bars whenever a skills.txt block enters the DOM
+  const observer = new MutationObserver(() => {
+    document.querySelectorAll(".skillbar-fill:not([data-done])").forEach((el) => {
+      el.setAttribute("data-done", "1");
+      requestAnimationFrame(() => { el.style.width = el.dataset.target + "%"; });
+    });
+  });
+  observer.observe(document.getElementById("screen"), { childList: true, subtree: true });
+})();
+</script>
+</body>
+</html>
