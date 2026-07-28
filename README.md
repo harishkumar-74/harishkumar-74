@@ -15,7 +15,7 @@ Building secure, scalable and automated cloud infrastructure.
 
 ---
 
-```bash
+```console
 harish@devops:~$ cat philosophy.txt
 ```
 
@@ -147,7 +147,7 @@ projects/
 
 ---
 
-```bash
+```console
 harish@devops:~/projects$ find . -name bugs
 ```
 
