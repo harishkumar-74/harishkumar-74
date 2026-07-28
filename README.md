@@ -1,7 +1,7 @@
-# █████████████████████████████████████████████
+# ███████████████████████████████████████
 # Ubuntu 24.04 LTS
 # Last login: Recruiter from github.com
-# █████████████████████████████████████████████
+# ███████████████████████████████████████
 
 ```console
 harish@devops:~$ whoami
@@ -21,7 +21,7 @@ harish@devops:~$ cat about.txt
 
 ```yaml
 Name        : Harish Kumar S
-Location    : Tamil Nadu, India
+Location    : Coimbatore, Tamil Nadu, India.
 
 Education   : Integrated M.Tech (Computer Science & Engineering)
 
@@ -78,11 +78,11 @@ harish@devops:~$ history
 ```
 
 ```text
-2026  DevOps Engineer          Benchmarrk
+2026  DevOps Engineer          Benchmarrk - Coimbatore
 
-2025  Cloud Engineer Intern    Virtual Softech
+2025  Cloud Engineer Intern    Virtual Softech - Coimbatore
 
-2024  Web Developer Intern     Senthuron Tech
+2024  Web Developer Intern     Senthuron Tech - Coimbatore
 ```
 
 ---
