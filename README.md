@@ -12,7 +12,22 @@ DevOps Engineer | Cloud Engineer | DevSecOps Enthusiast
 
 Building secure, scalable and automated cloud infrastructure.
 ```
+```bash
+harish@devops:~$ cat philosophy.txt
+```
 
+```text
+✔ Infrastructure should be reproducible.
+
+✔ Manual deployment is a bug.
+
+✔ Security belongs in every pipeline.
+
+✔ If it isn't automated,
+  I'll probably automate it.
+
+✔ Learn. Build. Break. Fix. Repeat.
+```
 ---
 
 ```console
@@ -125,7 +140,13 @@ projects/
     ├── Grafana
     └── CloudWatch
 ```
+```bash
+harish@devops:~/projects$ find . -name bugs
+```
 
+```text
+find: 'bugs': No such file or directory 😎
+```
 ---
 
 ```console
