@@ -1,4 +1,3 @@
-````markdown
 # ███████████████████████████████████████
 # Ubuntu 24.04 LTS
 # Last login: Recruiter from github.com
@@ -245,4 +244,3 @@ Thanks for visiting.
 
 Let's build secure, scalable and reliable cloud infrastructure together. 🚀
 ```
-````
