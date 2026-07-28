@@ -20,15 +20,11 @@ harish@devops:~$ cat philosophy.txt
 ```
 
 ```text
-✔ Infrastructure should be reproducible.
 
 ✔ Manual deployment is a bug.
 
-✔ Security belongs in every pipeline.
+✔ Learn. Build. Break. Fix. Repeat
 
-✔ If it isn't automated, I'll probably automate it.
-
-✔ Learn. Build. Break. Fix. Repeat.
 ```
 
 ---
