@@ -1,242 +1,69 @@
-# █████████████████████████████████████████
-# Ubuntu 24.04 LTS
-# Last login: Recruiter from github.com
-# █████████████████████████████████████████
+<h1 align="center">Hi, I'm Harish Kumar S 👋</h1>
+<h3 align="center">DevOps & DevSecOps Engineer · Cloud Engineer</h3>
 
-```console
-harish@devops:~$ whoami
+<p align="center">
+Automating everything that can be automated — from Terraform-provisioned infrastructure to secure, GitOps-driven Kubernetes pipelines.
+</p>
 
-Harish Kumar S
-
-DevOps Engineer | Cloud Engineer | DevSecOps Enthusiast
-
-Building secure, scalable and automated cloud infrastructure.
-```
+<p align="center">
+<a href="https://linkedin.com/in/harishkumar74"><img src="https://img.shields.io/badge/LinkedIn-0A66C2?style=flat&logo=linkedin&logoColor=white"></a>
+<a href="mailto:harish74gobi@gmail.com"><img src="https://img.shields.io/badge/Email-D14836?style=flat&logo=gmail&logoColor=white"></a>
+<img src="https://img.shields.io/badge/Location-Coimbatore%2C%20India-39d97a?style=flat">
+</p>
 
 ---
 
-```console
-harish@devops:~$ cat philosophy.txt
-```
+### 🚀 What I do
 
-```text
+I design and maintain secure CI/CD pipelines and cloud infrastructure — cutting deployment time by **50%**, manual provisioning effort by **60%**, and improving system availability by **25%** through automation and DevSecOps practices.
 
-✔ Manual deployment is a bug.
+- 🔧 **Currently:** DevOps Engineer @ Benchmarrk — Jenkins/GitHub Actions pipelines, ArgoCD + Helm GitOps, DevSecOps toolchains
+- ☁️ **Background:** Cloud Engineer Intern @ Virtual Softech — AWS infrastructure, Terraform automation
+- 🌐 **Started in:** Frontend development @ Senthuron Tech
 
-✔ Learn. Build. Break. Fix. Repeat
+### 🛠️ Tech Stack
 
-```
+**Cloud & IaC**
+![AWS](https://img.shields.io/badge/AWS-232F3E?style=flat&logo=amazonaws&logoColor=FF9900)
+![Terraform](https://img.shields.io/badge/Terraform-844FBA?style=flat&logo=terraform&logoColor=white)
+![Ansible](https://img.shields.io/badge/Ansible-EE0000?style=flat&logo=ansible&logoColor=white)
 
----
+**Containers & Orchestration**
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white)
+![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?style=flat&logo=kubernetes&logoColor=white)
+![ArgoCD](https://img.shields.io/badge/ArgoCD-EF7B4D?style=flat&logo=argo&logoColor=white)
+![Helm](https://img.shields.io/badge/Helm-0F1689?style=flat&logo=helm&logoColor=white)
 
-```console
-harish@devops:~$ cat about.txt
-```
+**CI/CD & DevSecOps**
+![Jenkins](https://img.shields.io/badge/Jenkins-D24939?style=flat&logo=jenkins&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat&logo=githubactions&logoColor=white)
+![SonarQube](https://img.shields.io/badge/SonarQube-4E9BCD?style=flat&logo=sonarqube&logoColor=white)
+![Trivy](https://img.shields.io/badge/Trivy-1904DA?style=flat)
 
-```yaml
-Name           : Harish Kumar S
-Location       : Coimbatore, Tamil Nadu, India
-Education      : Integrated M.Tech (Computer Science & Engineering)
+**Observability**
+![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=flat&logo=prometheus&logoColor=white)
+![Grafana](https://img.shields.io/badge/Grafana-F46800?style=flat&logo=grafana&logoColor=white)
+![Datadog](https://img.shields.io/badge/Datadog-632CA6?style=flat&logo=datadog&logoColor=white)
 
-Current Role   :
-  - DevOps Engineer @ Benchmarrk
+**Languages & OS**
+![Linux](https://img.shields.io/badge/Linux-FCC624?style=flat&logo=linux&logoColor=black)
+![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)
+![Bash](https://img.shields.io/badge/Bash-4EAA25?style=flat&logo=gnubash&logoColor=white)
+![Git](https://img.shields.io/badge/Git-F05032?style=flat&logo=git&logoColor=white)
 
-Previous Roles :
-  - Cloud Engineer Intern @ Virtual Softech
-  - Web Developer Intern @ Senthuron Tech
+### 📌 Featured Projects
 
-Current Focus  :
-  - AWS Cloud
-  - Kubernetes
-  - Terraform
-  - CI/CD
-  - GitOps
-  - DevSecOps
+| Project | Highlights |
+|---|---|
+| **End-to-End DevSecOps CI/CD Pipeline** | Jenkins → SonarQube → Trivy → OWASP gates, zero-downtime K8s deploys, 50% faster release cycle |
+| **AWS 3-Tier HA Architecture** | Multi-AZ RDS, ALB, Auto Scaling — 99.9% SLA, fully Terraform-provisioned in <15 min |
+| **Datadog + Prometheus Observability Stack** | Full-stack APM & metrics — 45% faster MTTD, 30% faster MTTR |
+| **Terraform Infrastructure Automation** | Reusable modules, remote state + locking, drift detection — 60% less manual effort |
 
-Learning       :
-  - Advanced Kubernetes
-  - Platform Engineering
-  - Cloud Security
-```
+### 📫 Reach me
 
----
+**Email:** harish74gobi@gmail.com &nbsp;·&nbsp; **LinkedIn:** [harishkumar74](https://linkedin.com/in/harishkumar74)
 
-```console
-harish@devops:~$ kubectl get skills
-```
+*Open to DevOps, DevSecOps, and Cloud Engineer opportunities — India & Remote.*
 
-```text
-NAME               STATUS
-------------------------------
-AWS                ✅ Ready
-Docker             ✅ Ready
-Kubernetes         ✅ Ready
-Terraform          ✅ Ready
-Jenkins            ✅ Ready
-GitHub Actions     ✅ Ready
-ArgoCD             ✅ Ready
-Helm               ✅ Ready
-Linux              ✅ Ready
-Bash               ✅ Ready
-Python             ✅ Ready
-Prometheus         ✅ Ready
-Grafana            ✅ Ready
-Datadog            ✅ Ready
-SonarQube          ✅ Ready
-Trivy              ✅ Ready
-```
-
----
-
-```console
-harish@devops:~$ history
-```
-
-```text
-2026    DevOps Engineer          Benchmarrk, Coimbatore
-
-2025    Cloud Engineer Intern    Virtual Softech, Coimbatore
-
-2024    Web Developer Intern     Senthuron Tech, Coimbatore
-```
-
----
-
-```console
-harish@devops:~$ tree projects/
-```
-
-```text
-projects/
-│
-├── 📁 ci-cd-devsecops-pipeline
-│   ├── Jenkins
-│   ├── Docker
-│   ├── Kubernetes
-│   ├── ArgoCD
-│   ├── Helm
-│   ├── SonarQube
-│   ├── Trivy
-│   └── OWASP Dependency Check
-│
-├── 📁 aws-3tier-architecture
-│   ├── EC2
-│   ├── VPC
-│   ├── RDS
-│   ├── ALB
-│   ├── Auto Scaling
-│   ├── Route53
-│   └── Terraform
-│
-├── 📁 terraform-infrastructure
-│   ├── Remote State
-│   ├── S3 Backend
-│   ├── DynamoDB Locking
-│   └── Jenkins Automation
-│
-└── 📁 observability-stack
-    ├── Datadog
-    ├── Prometheus
-    ├── Grafana
-    └── CloudWatch
-```
-
----
-
-```console
-harish@devops:~/projects$ find . -name bugs
-```
-
-```text
-find: 'bugs': No such file or directory 😎
-```
-
----
-
-```console
-harish@devops:~$ cat achievements.log
-```
-
-```text
-Metric                              Improvement
------------------------------------------------
-Deployment Time                     +50%
-Manual Provisioning                 -60%
-System Availability                 +25%
-Release Efficiency                  +40%
-Security Exposure                   -35%
-Mean Time To Detect (MTTD)          -45%
-```
-
----
-
-```console
-harish@devops:~$ systemctl status harish
-```
-
-```text
-● harish.service - DevOps Engineer
-     Loaded: loaded
-     Active: active (running)
-
-Environment:
-  ✔ AWS
-  ✔ Kubernetes
-  ✔ Terraform
-  ✔ Jenkins
-  ✔ Docker
-  ✔ GitHub Actions
-  ✔ ArgoCD
-  ✔ Helm
-  ✔ Linux
-  ✔ DevSecOps
-
-Current Mission:
-  Automating cloud infrastructure and
-  building secure CI/CD pipelines.
-```
-
----
-
-```console
-harish@devops:~$ cat contact.yml
-```
-
-```yaml
-Email      : harish74gobi@gmail.com
-LinkedIn   : linkedin.com/in/harishkumar74
-GitHub     : github.com/harishkumar-74
-```
-
----
-
-```console
-harish@devops:~$ echo $STATUS
-```
-
-```text
-Open to Opportunities
-
-✔ Cloud Engineer
-✔ DevOps Engineer
-✔ DevSecOps Engineer
-✔ Remote
-✔ Hybrid
-✔ On-site
-```
-
----
-
-```console
-harish@devops:~$ logout
-```
-
-```text
-Saving session...
-
-Connection to recruiter closed.
-
-Thanks for visiting.
-
-Let's build secure, scalable and reliable cloud infrastructure together. 🚀
-```
+<p align="center"><sub>⭐️ from <a href="https://github.com/harishkumar-74">harishkumar-74</a></sub></p>
