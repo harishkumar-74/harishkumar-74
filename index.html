@@ -96,6 +96,15 @@ a:hover{ color:var(--white); border-bottom-color:var(--cyan); }
 #boot-skip{ position:absolute; bottom:5vh; right:6vw; color:var(--muted); font-size:12px; border:1px solid var(--border); padding:6px 12px; border-radius:var(--radius); cursor:pointer; background:transparent; font-family:var(--font-mono); }
 #boot-skip:hover{ color:var(--green); border-color:var(--green-dim); }
 #boot-screen.hidden{ display:none; }
+#boot-log pre.ascii{ max-width:100%; overflow-x:auto; }
+@media (max-width:640px){
+  #boot-log pre.ascii{ font-size:6px !important; line-height:1.15; }
+}
+
+/* fake SSH login block, rendered inline in the boot log after the boot steps */
+.ssh-line{ opacity:0; animation:fadeIn .15s ease forwards; }
+.ssh-cursor{ display:inline-block; width:8px; height:14px; background:var(--green); vertical-align:middle; margin-left:2px; animation:sshBlink 1s step-end infinite; }
+@keyframes sshBlink{ 0%,100%{ opacity:1; } 50%{ opacity:0; } }
 
 /* =====================================================================
    MODULE: TERMINAL SHELL
@@ -111,13 +120,19 @@ a:hover{ color:var(--white); border-bottom-color:var(--cyan); }
 .tb-title{ flex:1 1 auto; text-align:center; color:var(--muted); letter-spacing:.3px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .tb-title b{ color:var(--green); font-weight:600; }
 /* --- FIXED-WIDTH STATUS BAR: every field has a stable box so the row
-   never reflows as the uptime counter grows from "3s" to "1h 12m 04s" --- */
+   never reflows as the uptime counter grows from "3s" to "1h 12m 04s",
+   and every field always shows its label, not just its value --- */
 .tb-status{ flex:0 0 auto; display:flex; gap:14px; align-items:center; font-size:11.5px; font-variant-numeric:tabular-nums; }
 .tb-status span{ display:flex; align-items:center; gap:5px; white-space:nowrap; }
-.tb-field-online{ width:58px; }
-.tb-field-uptime{ width:132px; justify-content:flex-end !important; text-align:right; }
-.tb-field-uptime span.up-val{ display:inline-block; min-width:78px; text-align:right; }
-.tb-field-branch{ width:44px; }
+.tb-field{ display:flex; align-items:center; gap:5px; }
+.tb-field .lbl{ color:var(--muted); }
+.tb-field .val{ color:var(--green); }
+.tb-field-online{ width:76px; }
+.tb-field-uptime{ width:150px; }
+.tb-field-uptime .val{ display:inline-block; min-width:80px; }
+.tb-field-branch{ width:78px; }
+.tb-field-theme{ width:96px; }
+.tb-field-matrix{ width:100px; }
 .dot-live{ width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green-glow); animation:pulse 2s ease-in-out infinite; flex:0 0 auto; }
 @keyframes pulse{ 0%,100%{ opacity:1;} 50%{opacity:.35;} }
 .tb-btn{ background:transparent; border:1px solid var(--border); color:var(--muted); font-family:var(--font-mono); font-size:11px; padding:3px 8px; border-radius:var(--radius); cursor:pointer; flex:0 0 auto; }
@@ -205,6 +220,7 @@ table.tty td{ padding:3px 18px 3px 0; vertical-align:top; }
   table.tty{ display:block; overflow-x:auto; max-width:100%; }
   .tb-title{ display:none; }
   .tb-field-branch{ display:none; }
+  .tb-field-theme{ display:none; }
   .whoami-body{ flex-direction:column; align-items:center; text-align:left; }
   .whoami-avatar,.whoami-avatar-fallback{ width:104px; height:104px; }
   .whoami-avatar-fallback span{ font-size:30px; }
@@ -232,7 +248,7 @@ table.tty td{ padding:3px 18px 3px 0; vertical-align:top; }
 <!-- ============================ BOOT SCREEN ============================ -->
 <div id="boot-screen">
   <div id="boot-log"></div>
-  <button id="boot-skip" type="button">skip boot ⏎</button>
+  <button id="boot-skip" type="button">skip ⏎</button>
 </div>
 
 <!-- ============================ TERMINAL SHELL ========================== -->
@@ -241,9 +257,10 @@ table.tty td{ padding:3px 18px 3px 0; vertical-align:top; }
     <div class="tb-dots"><span class="tb-dot r"></span><span class="tb-dot y"></span><span class="tb-dot g"></span></div>
     <div class="tb-title"><b>harish@cloud</b>: ~/portfolio — 80x24</div>
     <div class="tb-status">
-      <span class="tb-field-online"><i class="dot-live"></i> online</span>
-      <span class="tb-field-uptime dim"><span class="up-val" id="tb-uptime">0s</span></span>
-      <span class="tb-field-branch dim">⎇ main</span>
+      <span class="tb-field tb-field-online"><i class="dot-live"></i><span class="lbl">ONLINE</span></span>
+      <span class="tb-field tb-field-uptime"><span class="lbl">UPTIME:</span> <span class="val" id="tb-uptime">0s</span></span>
+      <span class="tb-field tb-field-branch"><span class="lbl">BRANCH:</span> <span class="val">main</span></span>
+      <span class="tb-field tb-field-theme"><span class="lbl">THEME:</span> <span class="val" id="tb-theme">Green</span></span>
       <button class="tb-btn" id="btn-theme" type="button" title="cycle theme">theme</button>
       <button class="tb-btn" id="btn-matrix" type="button" title="toggle matrix rain">matrix</button>
     </div>
@@ -328,13 +345,8 @@ const PortfolioData = {
     githubHandle: "github.com/harishkumar-74",
     linkedin: "https://linkedin.com/in/harishkumar74",
     linkedinHandle: "linkedin.com/in/harishkumar74",
-    // No Google Drive link supplied yet — swap this for the Drive URL any time.
-    // If it's an https:// link, `resume` will open it in a new tab after the
-    // progress animation; if it's a local filename, it downloads directly.
     resumeLink: "resume.pdf",
     status: "Available for Hire — Open to DevOps, DevSecOps & Cloud roles (India & Remote)",
-    // Drop a real photo in the same folder as this file and point to it here,
-    // e.g. "profile.jpg" — until then `whoami` renders a terminal-style avatar.
     avatarUrl: "",
   },
 
@@ -408,6 +420,7 @@ const PortfolioData = {
         "Embedded a DevSecOps toolchain into every pipeline stage (SonarQube, Trivy, OWASP Dependency-Check), reducing critical security exposure by 35%.",
         "Deployed Datadog alongside Prometheus and Grafana for full-stack observability, cutting MTTD by 45%.",
       ],
+      stack: ["Jenkins", "GitHub Actions", "ArgoCD", "Helm", "Kubernetes", "SonarQube", "Trivy", "OWASP Dependency-Check", "Datadog", "Prometheus", "Grafana"],
     },
     {
       slug: "virtual-softech",
@@ -417,6 +430,7 @@ const PortfolioData = {
         "Automated environment provisioning with Terraform modules and shell scripts, removing 60% of manual effort.",
         "Strengthened network security with public/private subnet design, NAT Gateways, Security Groups and NACLs.",
       ],
+      stack: ["AWS EC2", "VPC", "IAM", "S3", "RDS", "ALB", "Auto Scaling", "Terraform", "Bash"],
     },
     {
       slug: "senthuron-tech",
@@ -425,6 +439,7 @@ const PortfolioData = {
         "Delivered responsive websites for multiple clients, increasing user engagement by 30%+ and cutting page load time by 40%.",
         "Collaborated in Agile sprints with regular code reviews and stand-ups, consistently meeting sprint commitments.",
       ],
+      stack: ["HTML/CSS/JS", "Responsive Design", "Git", "Agile"],
     },
   ],
 
@@ -542,12 +557,18 @@ const Renderers = (() => {
         <div class="skillbar-track"><div class="skillbar-fill" data-target="${s.level}" style="transition-delay:${i * 45}ms;"></div></div>
         <span class="skillbar-val">${s.level}%</span>
       </div>`).join("");
-    return `<div class="out">${fileHeader("skills (overview)")}${rows}</div>`;
+    return `<div class="out">${fileHeader("skills.txt (overview)")}${rows}</div>`;
   };
 
   const skillFileBlock = (path, entry) => {
     const tags = entry.items.map((t) => `<span class="tag">${esc(t)}</span>`).join("");
     return `<div class="out">${fileHeader(path)}<p class="c-cyan">${esc(entry.title)}</p><div>${tags}</div></div>`;
+  };
+
+  const allSkillsFileBlock = (path) => {
+    const groups = Object.values(PortfolioData.skillFiles);
+    const grouped = groups.map((g) => `<p class="c-cyan" style="margin-top:10px;">${esc(g.title)}</p><div>${g.items.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div>`).join("");
+    return `<div class="out">${fileHeader(path)}${skillsOverviewBlock().replace(/<div class="out">.*?<\/div>\s*/, "")}${grouped}</div>`;
   };
 
   const contactBlock = () => {
@@ -571,10 +592,26 @@ const Renderers = (() => {
     </div></div>
   </div>`;
 
+  const allExperienceFileBlock = (path) => {
+    const items = PortfolioData.experience.map((e) => `
+      <div class="tl-item">
+        <div class="tl-role">${esc(e.role)} <span class="dim">@ ${esc(e.org)}</span></div>
+        <div class="tl-meta">${esc(e.loc)} · ${esc(e.period)}</div>
+        <ul>${e.points.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>
+        <div style="margin-top:6px;">${e.stack.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div>
+      </div>`).join("");
+    return `<div class="out">${fileHeader(path)}<div class="timeline">${items}</div></div>`;
+  };
+
   const educationFileBlock = (path, ed) => `<div class="out">
     ${fileHeader(path)}
     <p><b>${esc(ed.degree)}</b><br><span class="dim">${esc(ed.school)} · ${esc(ed.period)}</span></p>
   </div>`;
+
+  const allEducationFileBlock = (path) => {
+    const items = PortfolioData.education.map((ed) => `<p><b>${esc(ed.degree)}</b><br><span class="dim">${esc(ed.school)} · ${esc(ed.period)}</span></p>`).join("");
+    return `<div class="out">${fileHeader(path)}${items}</div>`;
+  };
 
   const projectListBlock = () => {
     const rows = PortfolioData.projects.map((p) => `
@@ -634,8 +671,9 @@ const Renderers = (() => {
   };
 
   return {
-    fileHeader, paragraphBlock, skillsOverviewBlock, skillFileBlock, contactBlock,
-    experienceFileBlock, educationFileBlock, projectListBlock, projectDetailBlock, neofetchBlock,
+    fileHeader, paragraphBlock, skillsOverviewBlock, skillFileBlock, allSkillsFileBlock, contactBlock,
+    experienceFileBlock, allExperienceFileBlock, educationFileBlock, allEducationFileBlock,
+    projectListBlock, projectDetailBlock, neofetchBlock,
   };
 })();
 
@@ -667,23 +705,17 @@ const VFS = (() => {
     "tools.txt":       renderFile((path) => Renderers.skillFileBlock(path, D.skillFiles.tools)),
   });
 
-  const expBySlug = Object.fromEntries(D.experience.map((e) => [e.slug, e]));
   const experienceDir = dir({
-    "benchmarrk.txt":       renderFile((path) => Renderers.experienceFileBlock(path, expBySlug["benchmarrk"])),
-    "virtual-softech.txt":  renderFile((path) => Renderers.experienceFileBlock(path, expBySlug["virtual-softech"])),
-    "senthuron-tech.txt":   renderFile((path) => Renderers.experienceFileBlock(path, expBySlug["senthuron-tech"])),
+    "work-experience.txt": renderFile((path) => Renderers.allExperienceFileBlock(path)),
   });
 
-  const eduBySlug = Object.fromEntries(D.education.map((e) => [e.slug, e]));
   const educationDir = dir({
-    "mtech.txt": renderFile((path) => Renderers.educationFileBlock(path, eduBySlug["mtech"])),
-    "hsc.txt":   renderFile((path) => Renderers.educationFileBlock(path, eduBySlug["hsc"])),
-    "sslc.txt":  renderFile((path) => Renderers.educationFileBlock(path, eduBySlug["sslc"])),
+    "educational-details.txt": renderFile((path) => Renderers.allEducationFileBlock(path)),
   });
 
   const projBySlug = Object.fromEntries(D.projects.map((p) => [p.slug, p]));
   const projectsDir = dir({
-    "devsecops.txt":    renderFile((path) => Renderers.projectDetailBlock(projBySlug["devsecops"], path)),
+    "devsecops.txt":     renderFile((path) => Renderers.projectDetailBlock(projBySlug["devsecops"], path)),
     "aws.txt":           renderFile((path) => Renderers.projectDetailBlock(projBySlug["aws"], path)),
     "monitoring.txt":    renderFile((path) => Renderers.projectDetailBlock(projBySlug["monitoring"], path)),
     "microservices.txt": renderFile((path) => Renderers.projectDetailBlock(projBySlug["microservices"], path)),
@@ -693,6 +725,7 @@ const VFS = (() => {
   const portfolioDir = dir({
     "about": aboutDir,
     "skills": skillsDir,
+    "skills.txt": renderFile((path) => Renderers.allSkillsFileBlock(path)),
     "experience": experienceDir,
     "education": educationDir,
     "projects": projectsDir,
@@ -815,27 +848,54 @@ class DirectoryNavigator {
     return null;
   }
 
-  ls(arg) {
-    const target = arg ? PathResolver.resolve(this.cwd, arg) : this.cwd;
+  ls(rawArgs) {
+    const args = (rawArgs || "").trim().split(/\s+/).filter(Boolean);
+    const flagTokens = args.filter((a) => a.startsWith("-"));
+    const pathArg = args.find((a) => !a.startsWith("-"));
+    const showAll = flagTokens.some((f) => f.includes("a"));
+    const longForm = flagTokens.some((f) => f.includes("l"));
+
+    const target = pathArg ? PathResolver.resolve(this.cwd, pathArg) : this.cwd;
     const node = VFS.getNode(target);
-    if (!node) return `<div class="out c-red">ls: cannot access '${Utils.escapeHtml(arg)}': No such file or directory</div>`;
+    if (!node) return `<div class="out c-red">ls: cannot access '${Utils.escapeHtml(pathArg)}': No such file or directory</div>`;
     if (node.type === "file") {
-      const name = arg.split("/").filter(Boolean).pop();
+      const name = pathArg.split("/").filter(Boolean).pop();
       return `<div class="out">${Utils.escapeHtml(name)}</div>`;
     }
-    const names = Object.keys(node.children).sort((a, b) => {
+
+    let names = Object.keys(node.children).sort((a, b) => {
       const ad = node.children[a].type === "dir", bd = node.children[b].type === "dir";
       if (ad !== bd) return ad ? -1 : 1;
       return a.localeCompare(b);
     });
-    if (names.length === 0) return `<div class="out dim">(empty)</div>`;
+
+    if (names.length === 0) {
+      if (longForm) return `<div class="out dim">total 0</div>`;
+      return `<div class="out dim">(empty)</div>`;
+    }
+
+    if (longForm) {
+      const rows = names.map((n) => {
+        const child = node.children[n];
+        const isDir = child.type === "dir";
+        const perms = isDir ? "drwxr-xr-x" : "-rw-r--r--";
+        const size = isDir ? "4096" : String(1200 + n.length * 37);
+        const label = isDir
+          ? `<span class="c-cyan">${Utils.escapeHtml(n)}/</span>`
+          : `<span class="c-white">${Utils.escapeHtml(n)}</span>`;
+        return `<div>${perms}  1 harish  harish  ${size.padStart(6," ")}  Jul 29 09:41  ${label}</div>`;
+      }).join("");
+      return `<div class="out">${showAll ? `<div>drwxr-xr-x  1 harish  harish     4096  Jul 29 09:41  <span class="c-cyan">.</span></div><div>drwxr-xr-x  1 harish  harish     4096  Jul 29 09:41  <span class="c-cyan">..</span></div>` : ""}${rows}</div>`;
+    }
+
     const rendered = names.map((n) => {
       const child = node.children[n];
       return child.type === "dir"
         ? `<span class="c-cyan">${Utils.escapeHtml(n)}/</span>`
         : `<span class="c-white">${Utils.escapeHtml(n)}</span>`;
     }).join("&nbsp;&nbsp;&nbsp;");
-    return `<div class="out">${rendered}</div>`;
+    const dotEntries = showAll ? `<span class="c-cyan">.</span>&nbsp;&nbsp;&nbsp;<span class="c-cyan">..</span>&nbsp;&nbsp;&nbsp;` : "";
+    return `<div class="out">${dotEntries}${rendered}</div>`;
   }
 
   tree(arg) {
@@ -907,7 +967,7 @@ const CommandRegistry = (() => {
       const groups = [
         { title: "navigation", cmds: [
           ["pwd", "print working directory"],
-          ["ls [path]", "list contents of the current (or given) directory"],
+          ["ls [-l] [-la] [path]", "list contents of the current (or given) directory"],
           ["cd [path]", "change directory — supports .. , ~ , / , and relative paths"],
           ["tree [path]", "show the folder hierarchy from here down"],
           ["cat <file>", "print a file's contents"],
@@ -946,6 +1006,7 @@ const CommandRegistry = (() => {
           <span class="c-purple">$</span> ls<br>
           <span class="c-purple">$</span> cat about.txt<br>
           <span class="c-purple">$</span> cd ..<br>
+          <span class="c-purple">$</span> cat skills.txt<br>
           <span class="c-purple">$</span> cd projects<br>
           <span class="c-purple">$</span> cat devsecops.txt
         </div>`;
@@ -967,7 +1028,6 @@ const CommandRegistry = (() => {
       loading.remove();
 
       const { identity } = D;
-      const sep = "─".repeat(2) + " ".repeat(0);
       const avatar = identity.avatarUrl
         ? `<img class="whoami-avatar" src="${identity.avatarUrl}" alt="${esc(identity.name)}" loading="lazy" />`
         : `<div class="whoami-avatar-fallback" aria-hidden="true"><span>HK</span></div>`;
@@ -1025,7 +1085,7 @@ const CommandRegistry = (() => {
   });
 
   register({ name: "pwd", usage: "pwd", description: "Print working directory", handler: (_a, term) => term.nav.pwd() });
-  register({ name: "ls", usage: "ls [path]", description: "List directory contents", handler: (args, term) => term.nav.ls(args[0]) });
+  register({ name: "ls", usage: "ls [-l] [-la] [path]", description: "List directory contents", handler: (args, term) => term.nav.ls(args.join(" ")) });
   register({
     name: "cd", usage: "cd [path]", description: "Change directory",
     handler: (args, term) => {
@@ -1367,6 +1427,7 @@ class TerminalEngine {
     this.ghost = document.getElementById("ghost");
     this.promptLabel = document.getElementById("prompt-label");
     this.uptimeEl = document.getElementById("tb-uptime");
+    this.themeEl = document.getElementById("tb-theme");
 
     this.nav = new DirectoryNavigator();
     this.historyMgr = new HistoryManager();
@@ -1429,6 +1490,7 @@ class TerminalEngine {
     this.theme = t;
     if (t === "green") document.documentElement.removeAttribute("data-theme");
     else document.documentElement.setAttribute("data-theme", t);
+    if (this.themeEl) this.themeEl.textContent = t.charAt(0).toUpperCase() + t.slice(1);
   }
   cycleTheme() {
     const order = ["green", "blue", "amber"];
@@ -1436,7 +1498,13 @@ class TerminalEngine {
     this.setTheme(next);
     this.print(`<div class="out c-green">Theme switched to '${next}'.</div>`);
   }
-  toggleMatrix() { this.matrixOn = !this.matrixOn; MatrixRain.setActive(this.matrixOn); return this.matrixOn; }
+  toggleMatrix() {
+    this.matrixOn = !this.matrixOn;
+    MatrixRain.setActive(this.matrixOn);
+    const btn = document.getElementById("btn-matrix");
+    if (btn) btn.textContent = this.matrixOn ? "matrix: on" : "matrix";
+    return this.matrixOn;
+  }
 
   async runInitial(cmd) { await this.execute(cmd, { silentEcho: true }); }
 
@@ -1512,6 +1580,13 @@ class TerminalEngine {
 
 /* =====================================================================
    MODULE: BOOT SEQUENCE
+   Three phases, all skippable at any point via the skip button:
+     1. Boot log       — "Initializing Harish Cloud Machine..." etc.
+     2. SSH simulation — auto-typed `ssh harish@cloud`, connect banner,
+                          welcome message, last-login line.
+     3. Terminal opens — hands off to TerminalEngine.
+   No passwords, keys, IPs, or hacker-style effects — just a clean,
+   realistic "logging into my own cloud box" feel.
    ===================================================================== */
 const BootSequence = (() => {
   const logEl = document.getElementById("boot-log");
@@ -1519,64 +1594,113 @@ const BootSequence = (() => {
   const terminalEl = document.getElementById("terminal");
   const skipBtn = document.getElementById("boot-skip");
 
+  const RULE = "--------------------------------";
+
+  const HARISH_ART =
+`██╗  ██╗ █████╗ ██████╗ ██╗███████╗██╗  ██╗
+██║  ██║██╔══██╗██╔══██╗██║██╔════╝██║  ██║
+███████║███████║██████╔╝██║███████╗███████║
+██╔══██║██╔══██║██╔══██╗██║╚════██║██╔══██║
+██║  ██║██║  ██║██║  ██║██║███████║██║  ██║
+╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚══════╝╚═╝  ╚═╝`;
+
   const steps = [
-    { t: "0.000000", text: "HarishOS Kernel 6.9.0-devops-cloud booting on x86_64...", cls: "boot-dim" },
-    { t: "0.142013", text: "Initializing DevOps Portfolio kernel modules", bar: true },
-    { t: "0.389442", text: "Loading AWS modules", ok: true },
-    { t: "0.612205", text: "Loading Kubernetes control plane", ok: true },
-    { t: "0.844471", text: "Starting Docker Engine", ok: true },
-    { t: "1.021982", text: "Loading Terraform providers", ok: true },
-    { t: "1.256730", text: "Mounting virtual filesystem at /home/harish", ok: true },
-    { t: "1.498120", text: "Establishing secure connection to github.com", ok: true },
-    { t: "1.723300", text: "Starting DevSecOps toolchain (sonarqube, trivy)", ok: true },
-    { t: "1.982211", text: "Starting observability stack (prometheus, grafana)", ok: true },
-    { t: "2.201044", text: "Bringing up network interface eth0... ", ok: true, extra: "192.168.10.74/24" },
-    { t: "2.410932", text: "Starting shell", ok: true },
+    { text: RULE, cls: "boot-dim" },
+    { text: "Initializing Harish Cloud Machine...", cls: "boot-dim" },
+    { text: "Starting system services", ok: true },
+    { text: "Loading terminal environment", ok: true },
+    { text: "Connecting to cloud instance", ok: true },
+    { text: "Mounting portfolio filesystem", ok: true },
+    { text: "System ready.", cls: "boot-ok" },
+    { text: RULE, cls: "boot-dim" },
   ];
 
   function lineHTML(step) {
-    const tag = `<span class="boot-dim">[</span><span class="c-cyan">${step.t}</span><span class="boot-dim">]</span>`;
-    if (step.ok) return `${tag} ${step.text}${step.extra ? `<span class="boot-dim"> ${step.extra}</span>` : ""} <span class="boot-ok">[  OK  ]</span>`;
-    return `${tag} ${step.text}`;
+    if (step.ok) return `<span class="boot-ok">[ OK ]</span> ${step.text}`;
+    return `<span class="${step.cls || ""}">${step.text}</span>`;
+  }
+
+  function appendLine(html) {
+    const div = document.createElement("div");
+    div.className = "boot-line";
+    div.innerHTML = html;
+    logEl.appendChild(div);
+    return div;
+  }
+
+  /** Types `text` character-by-character into a line, with a blinking
+   *  cursor at the end, to simulate a real command being typed live. */
+  async function typeLine(prefixHTML, text, opts = {}) {
+    const div = document.createElement("div");
+    div.className = "ssh-line";
+    logEl.appendChild(div);
+    const cursor = `<span class="ssh-cursor"></span>`;
+    let shown = "";
+    for (let i = 0; i <= text.length; i++) {
+      shown = text.slice(0, i);
+      div.innerHTML = `${prefixHTML}${Utils.escapeHtml(shown)}${cursor}`;
+      if (opts.skipped && opts.skipped()) { div.innerHTML = `${prefixHTML}${Utils.escapeHtml(text)}`; return div; }
+      await Utils.sleep(opts.speed || 55);
+    }
+    await Utils.sleep(180);
+    div.innerHTML = `${prefixHTML}${Utils.escapeHtml(text)}`;
+    return div;
+  }
+
+  async function runSshSimulation(isSkipped) {
+    // Blank line for breathing room after the boot rule.
+    appendLine("&nbsp;");
+
+    // Step 1: the command is "typed" as if the user/recruiter just hit enter on it.
+    await typeLine(`<span class="c-green">harish@local</span><span class="dim">:~$ </span>`, "ssh harish@cloud", { speed: 65, skipped: isSkipped });
+    await Utils.sleep(isSkipped() ? 0 : 320);
+
+    // Step 2: connection + welcome banner.
+    const connectLine = appendLine(`<span class="dim">Connecting to harish@cloud...</span>`);
+    connectLine.style.opacity = "0";
+    requestAnimationFrame(() => { connectLine.style.transition = "opacity .25s"; connectLine.style.opacity = "1"; });
+    await Utils.sleep(isSkipped() ? 0 : 700);
+
+    const welcomeLine = appendLine(`<span class="c-cyan">Welcome to Harish Cloud Terminal 🚀</span>`);
+    welcomeLine.style.opacity = "0";
+    requestAnimationFrame(() => { welcomeLine.style.transition = "opacity .25s"; welcomeLine.style.opacity = "1"; });
+    await Utils.sleep(isSkipped() ? 0 : 340);
+
+    // HARISH name banner, same ASCII style used by `neofetch` inside the terminal.
+    const artLine = appendLine(`<pre class="ascii a-cyan" style="font-size:11px; margin:10px 0 2px;">${Utils.escapeHtml(HARISH_ART)}</pre>`);
+    artLine.style.opacity = "0";
+    requestAnimationFrame(() => { artLine.style.transition = "opacity .3s"; artLine.style.opacity = "1"; });
+    await Utils.sleep(isSkipped() ? 0 : 430);
+
+    const lastLoginLine = appendLine(`<span class="boot-dim">Last login: Wed Jul 29 2026</span>`);
+    lastLoginLine.style.opacity = "0";
+    requestAnimationFrame(() => { lastLoginLine.style.transition = "opacity .25s"; lastLoginLine.style.opacity = "1"; });
+    await Utils.sleep(isSkipped() ? 0 : 360);
+
+    // Step 3: final prompt line, shown briefly before handing off to the
+    // real interactive terminal (which renders its own live prompt).
+    const promptLine = appendLine(`<span class="c-green">harish</span><span class="dim">@</span><span class="c-cyan">cloud</span><span class="dim">:~$</span> <span class="ssh-cursor"></span>`);
+    promptLine.style.opacity = "0";
+    requestAnimationFrame(() => { promptLine.style.transition = "opacity .25s"; promptLine.style.opacity = "1"; });
+    await Utils.sleep(isSkipped() ? 250 : 600);
   }
 
   async function run() {
     let skipped = false;
+    const isSkipped = () => skipped;
     const onSkip = () => { skipped = true; };
     skipBtn.addEventListener("click", onSkip);
 
+    // Phase 1: boot log.
     for (const step of steps) {
       if (skipped) break;
-      const div = document.createElement("div");
-      div.className = "boot-line";
-      logEl.appendChild(div);
-      if (step.bar) {
-        div.innerHTML = `<span class="boot-dim">[</span><span class="c-cyan">${step.t}</span><span class="boot-dim">]</span> ${step.text}<span class="boot-bar-track"><span class="boot-bar-fill"></span></span>`;
-        const fill = div.querySelector(".boot-bar-fill");
-        for (let p = 0; p <= 100 && !skipped; p += 20) { fill.style.width = p + "%"; await Utils.sleep(45); }
-      } else {
-        div.innerHTML = lineHTML(step);
-        await Utils.sleep(skipped ? 0 : 130);
-      }
+      appendLine(lineHTML(step));
+      await Utils.sleep(skipped ? 0 : 220);
     }
-    if (!skipped) await Utils.sleep(280);
+    await Utils.sleep(skipped ? 0 : 200);
 
-    const welcome = document.createElement("div");
-    welcome.className = "boot-line";
-    welcome.style.marginTop = "18px";
-    welcome.innerHTML =
-      `<pre class="ascii a-cyan" style="font-size:11px;">` +
-      `██╗  ██╗ █████╗ ██████╗ ██╗███████╗██╗  ██╗\n` +
-      `██║  ██║██╔══██╗██╔══██╗██║██╔════╝██║  ██║\n` +
-      `███████║███████║██████╔╝██║███████╗███████║\n` +
-      `██╔══██║██╔══██║██╔══██╗██║╚════██║██╔══██║\n` +
-      `██║  ██║██║  ██║██║  ██║██║███████║██║  ██║\n` +
-      `╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚══════╝╚═╝  ╚═╝` +
-      `</pre>` +
-      `<div class="c-white" style="margin-top:6px;">Welcome, Harish Kumar S — <span class="c-cyan">Cloud &amp; DevOps Engineer</span></div>` +
-      `<div class="boot-ok">System Ready.</div>`;
-    logEl.appendChild(welcome);
-    await Utils.sleep(skipped ? 60 : 500);
+    // Phase 2: fake SSH login simulation.
+    await runSshSimulation(isSkipped);
 
     skipBtn.removeEventListener("click", onSkip);
     bootScreen.classList.add("hidden");
